@@ -1,0 +1,28 @@
+{
+  "name": "confluence-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for accessing Confluence wiki documentation",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "confluence-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "confluence",
+    "wiki",
+    "documentation"
+  ],
+  "author": "",
+  "license": "MIT"
+}

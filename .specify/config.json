@@ -1,0 +1,3 @@
+{
+  "testDirectories": ["tests", "test", "src/test", "__tests__"]
+}

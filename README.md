@@ -393,25 +393,6 @@ The repository contains a broad Bash/PowerShell automation suite. The table belo
 
 ## Available User Modules
 
-Enterprise SDD currently ships with the following user modules under `.sdd-modules/modules/`:
-
-| Module | Focus | Provides |
-|--------|-------|----------|
-| `core-be` | Java 21, Quarkus, DDD, Kafka backend patterns | Instructions, guidances, setup templates, prompts, constitution articles, agent patches |
-| `std-fe` | React 19, Vite, Stratos frontend patterns | Instructions, setup templates, agent patch |
-| `aws-fe` | React + Redux Toolkit + Stratos frontend workflows | Instructions, prompts, setup templates, agent patches |
-| `aidd` | Full-SDLC AI-driven development (IDE-agnostic) | 5 agents, 36 commands, 5 instructions, 2 skills, memory system |
-
-Quick usage:
-
-```bash
-sdd module list
-sdd module install core-be
-sdd module install std-fe
-sdd module install aws-fe
-sdd module install aidd
-```
-
 For the complete step-by-step module workflow, see [PLAYBOOK.md - User Modules](PLAYBOOK.md#user-modules).
 
 ## 🤖 Agent Reference
@@ -567,12 +548,7 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | python server.py
 
 ## Development History
 
-The framework evolved through 22 development waves. The detailed execution plan and completion evidence are preserved in [_plan/MASTER-PLAN.md](_plan/MASTER-PLAN.md). Historical snapshots are archived under [_plan/outdated/](_plan/outdated/).
-
-- **Wave 22 — APM + Genesis Harvest (April 27, 2026):** Added `hidden-unicode-scan` instruction (6 Unicode codepoint categories); documented `sdd doctor --scan-unicode` and `--format sarif` with 6 SARIF rule IDs; created `sdd-doctor-ci.yml.example` CI workflow; added APM coexistence guide to `INSTALL-IN-NEW-PROJECT.md` (file ownership, directory layout, integrity verification separation, install order).
-- **Wave 21 — Agentic SDLC Handbook Harvest + Codebase Hygiene (April 27, 2026):** Added `instruction-authoring` and `session-discipline` instructions for context engineering discipline; extended `stuck-detection` with ADAPT recovery loop; added G2R metrics to PLAYBOOK; trimmed 18 oversized instructions to ≤ 50 lines (splitting 10 into core + companion pairs); created `api-patterns`, `messaging-patterns`, and `source-verification` skills; trimmed all 21 skills to ≤ 80 lines.
-- **Wave 20 — Multi-Framework Public Refresh (April 26, 2026):** Added `hotspot-review` and `prfaq-working-backwards` skills; introduced RTC reasoning instructions and `checkpoint-preview` prompt; shipped skill-eval harness (`sdd skill validate --eval`) with `skill-eval-template.yaml`; added post-merge gate (`sdd gate post-merge`) and custom-branch lock (`sdd new --on-branch`, `feature.lock.json`); added skill scoping via `.specify/skill-mapping.yaml` and `sdd skill list --scope <agent>`; introduced sha256-tracked module manifests with `sdd module verify --reset|--accept`; established CLI deprecation policy (`CLI-DEPRECATIONS.md`, `@deprecated` decorator, `cli-deprecation-policy.instructions.md`) wired into `sdd doctor`; added `--with-reasoning`, `--hotspots`, `--preview`, `--feature` CLI flags.
-- **Wave 19 — Agent Skills + VORTEX + Tailored FE Harvest (April 24, 2026):** Added `skill-authoring` and `source-verification` instructions for behavioral reliability; introduced `source-citation-check` and `jira-rest-ops` skills; added `release-triad-synthesis` prompt for Gate 4 triad synthesis; created `convergence-ddd-aggregate` optional module (DDD aggregate design); added `phase-ledger-template`, `gate4-release-packet-template`, and `jira-endpoint-map-template`; extended CLI with `--rationalizations`, `--synthesize`, and `--phase-ledger` flags.
+The framework evolved through 22 development waves.
 
 ## 📄 License
 

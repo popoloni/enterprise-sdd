@@ -119,7 +119,7 @@ jobs:
               # Check if target exists
               if [[ ! -e "$target" ]]; then
                 echo "❌ Broken link in $file: $link" >> $GITHUB_STEP_SUMMARY
-                ((BROKEN++))
+                ((BROKEN++)) || true
               fi
               
             done < <(grep -oE '\]\([^)]+\)' "$file" | sed 's/\](\(.*\))/\1/' | grep -v '^http')

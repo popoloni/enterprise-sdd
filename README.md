@@ -1,6 +1,6 @@
 # Enterprise SDD Workflow
 
-> **v4.9** — May 15, 2026
+> **v4.10** — June 6, 2026
 
 A comprehensive Spec-Driven Development (SDD) workflow for enterprise teams, featuring AI-assisted specification, design, and implementation with quality gates and traceability.
 

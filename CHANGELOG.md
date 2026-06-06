@@ -42,7 +42,7 @@ Five structural-integrity tests that pre-dated Wave 27 (carried as tech debt) we
 - **`stub-scan` routed under `sdd-review` (Wave 24).** Added the `stub`/`placeholder`/`TODO`/`not implemented` → `stub-scan` row to the `sdd-review` namespace meta-skill routing table.
 - **`drift-analysis` routed under `sdd-doctor` (Wave 24).** Added the `drift`/`orphaned AC`/`orphaned test`/`stale AC` → `drift-analysis` row to the `sdd-doctor` namespace meta-skill routing table.
 - **EVOLUTION §8 dual-dispatch design boundary (Wave 26 §25 #4).** Added the "Dual dispatch paths for the same command" rejected-feature row (GSD-2 v3.0.0 #5786–#5789) to the Rejected Features table, aligning with Constraint #10 in `sdd-philosophy.instructions.md` and the PLAYBOOK Architecture Invariants.
-- **README version header** bumped to `v4.9 — May 15, 2026` to match the shipped version.
+- **README version header** bumped to `v4.10 — June 6, 2026` to match the shipped Wave 27 version.
 
 ---
 

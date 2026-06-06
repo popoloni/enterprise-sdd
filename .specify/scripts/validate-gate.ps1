@@ -371,7 +371,51 @@ function Invoke-Gate1 {
     Write-Host '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
     Write-Host '  🚪 Gate 1: Three Amigos Review'
     Write-Host '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-    Write-Host ''; Write-Host 'Checking: Do we all share the same understanding?'; Write-Host ''
+    Write-Host ''
+
+    # Delta-spec detection: if delta-spec.md exists, use delta validation path
+    $deltaPath = Join-Path $Dir 'delta-spec.md'
+    if (Test-Path $deltaPath) {
+        Write-Host 'Checking: Delta specification completeness'; Write-Host ''
+        Write-Info 'Delta spec detected — using reduced-ceremony validation'
+        if (-not (Test-FileExists $deltaPath 'delta-spec.md')) { $e++ }
+        if (-not (Test-FileNotTemplate $deltaPath 'delta-spec.md')) { $e++ }
+
+        $deltaContent = Get-Content $deltaPath -Raw
+
+        # Validate required fields based on change_type
+        if ($deltaContent -match '(?i)MODIFIED|RENAMED') {
+            Write-Info 'Change type MODIFIED/RENAMED — checking Before State field:'
+            if ($deltaContent -notmatch '## Before State' -or $deltaContent -match '\[Describe the current') {
+                Write-Err "'Before State' section is required and must be filled for MODIFIED/RENAMED changes"
+                $e++
+            } else {
+                Write-Ok "'Before State' section is present and filled"
+            }
+        }
+        if ($deltaContent -match '(?i)REMOVED') {
+            Write-Info 'Change type REMOVED — checking Justification field:'
+            if ($deltaContent -notmatch '## Justification' -or $deltaContent -match '\[Rationale for') {
+                Write-Err "'Justification' section is required and must be filled for REMOVED changes"
+                $e++
+            } else {
+                Write-Ok "'Justification' section is present and filled"
+            }
+        }
+
+        # Impact assessment is always required
+        Write-Info 'Impact assessment:'
+        if ($deltaContent -notmatch '## Impact Assessment') {
+            Write-Err "'Impact Assessment' section is missing"
+            $e++
+        } else {
+            Write-Ok "'Impact Assessment' section is present"
+        }
+        Write-Host ''
+        return $e
+    }
+
+    Write-Host 'Checking: Do we all share the same understanding?'; Write-Host ''
     Write-Info 'Required artifacts:'
     if (-not (Test-FileExists (Join-Path $Dir 'business-context.md') 'business-context.md')) { $e++ }
     if (-not (Test-FileNotTemplate (Join-Path $Dir 'business-context.md') 'business-context.md')) { $e++ }
@@ -399,6 +443,21 @@ function Invoke-Gate2 {
     if (-not (Test-FileNotTemplate (Join-Path $Dir 'plan.md') 'plan.md')) { $e++ }
     Write-Info 'Cross-reference checks:'
     if (-not (Test-USInPlan (Join-Path $Dir 'spec.md') (Join-Path $Dir 'plan.md'))) { $e++ }
+    # Wave 23 §C.4: Hidden Requirement Candidates section must be present in clarifications.md
+    Write-Info 'Hidden requirement scan:'
+    $clarFile = Join-Path $Dir 'clarifications.md'
+    if (Test-Path $clarFile) {
+        $clarContent = Get-Content $clarFile -Raw
+        if ($clarContent -match '(?i)## Hidden Requirement Candidates') {
+            Write-Ok 'Hidden Requirement Candidates section present in clarifications.md'
+        } else {
+            Write-Err 'clarifications.md missing "## Hidden Requirement Candidates" section'
+            Write-Check 'Run the hidden-requirement-scan skill or add the section manually before Gate 2'
+            $e++
+        }
+    } else {
+        Write-Warn 'clarifications.md not found — cannot verify hidden-requirement scan'
+    }
     Write-Info 'Clarification markers:'
     if (-not (Test-NeedsClarificationMarkers $Dir)) { $e++ }
     Write-Host ''

@@ -234,5 +234,6 @@ def write_report(results: list[SkillEvalResult], repo_root: Path) -> Path:
     reports_dir = repo_root / ".specify" / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
     out = reports_dir / "SKILL-EVAL-REPORT.md"
-    out.write_text(render_report(results), encoding="utf-8")
+    from sdd.io import atomic_write_text
+    atomic_write_text(out, render_report(results))
     return out

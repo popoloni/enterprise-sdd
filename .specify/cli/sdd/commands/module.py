@@ -29,6 +29,13 @@ def add_module_parser(subparsers: argparse._SubParsersAction) -> None:  # type: 
 
     inst = ms.add_parser("install", help="install a module")
     inst.add_argument("module_name", metavar="<name>", help="module name to install")
+    inst.add_argument(
+        "--explain-policy",
+        dest="explain_policy",
+        action="store_true",
+        default=False,
+        help="resolve policy + print decision (JSON) without installing (Wave 26 §25 #1 A.9)",
+    )
 
     rem = ms.add_parser("remove", help="remove a module")
     rem.add_argument("module_name", metavar="<name>", help="module name to remove")
@@ -56,8 +63,31 @@ def add_module_parser(subparsers: argparse._SubParsersAction) -> None:  # type: 
         help="accept current state as new baseline (recompute and persist hashes)",
     )
 
+    adopt = ms.add_parser(
+        "adopt",
+        help="bring an unmanaged on-disk module under registry control (Wave 27 §26 #3 A.14)",
+        description=(
+            "Review an unmanaged module directory (hash + Unicode scan), then register "
+            "it in .sdd-modules/registry.json with per-file sha256."
+        ),
+    )
+    adopt.add_argument("path", metavar="<path>", help="path to the unmanaged module directory")
+    adopt.add_argument(
+        "--version",
+        dest="adopt_version",
+        default="adopted",
+        help="version label to record in the registry (default: adopted)",
+    )
+    from sdd.io import add_json_flags
+    add_json_flags(p)
+
 
 def run_module(args: argparse.Namespace) -> int:
+    from sdd.io import wrap_envelope
+    return wrap_envelope(args, "module", lambda: _run_module_inner(args))
+
+
+def _run_module_inner(args: argparse.Namespace) -> int:
     try:
         repo_root = find_repo_root()
     except FileNotFoundError as exc:
@@ -68,6 +98,14 @@ def run_module(args: argparse.Namespace) -> int:
 
     if action == "verify":
         return _run_module_verify(args, repo_root)
+
+    if action == "adopt":
+        return _run_module_adopt(args, repo_root)
+
+    if action in ("install", "update"):
+        gate_exit = _module_policy_gate(args, repo_root, action)
+        if gate_exit is not None:
+            return gate_exit
 
     script_name = _SCRIPT_MAP.get(action)
     if script_name is None:
@@ -87,12 +125,38 @@ def run_module(args: argparse.Namespace) -> int:
         return 2
 
 
+def _run_module_adopt(args, repo_root) -> int:
+    """Wave 27 §26 #3 A.14 — adopt an unmanaged module directory."""
+    from pathlib import Path
+    from sdd.utils import artifact_adopt
+
+    raw = Path(args.path)
+    directory = raw if raw.is_absolute() else (repo_root / raw)
+    if not directory.is_dir():
+        output.error(f"Not a directory: {args.path}")
+        return 2
+
+    result = artifact_adopt.adopt_artifact(
+        repo_root, directory, category="modules",
+        version=getattr(args, "adopt_version", "adopted"),
+    )
+    for w in result["unicode_warnings"]:
+        output.warn(f"Unicode scan: {w}")
+    if result["already"]:
+        output.info(f"Module '{result['name']}' already registered — no change.")
+        return 0
+    output.success(
+        f"Adopted module '{result['name']}' ({result['files']} file(s), "
+        f"manifest {result['manifest'][:12]}…) into registry.json."
+    )
+    return 0
+
+
 def _run_module_verify(args, repo_root) -> int:
     """Verify hash integrity of an installed module (Wave 20 §20.C.7)."""
     from sdd.utils import module_integrity
 
     module_id = args.module_name
-
     if args.reset:
         output.info(f"Re-installing module '{module_id}' from source…")
         cmd = script_command("module-install", repo_root)
@@ -151,3 +215,28 @@ def _run_module_verify(args, repo_root) -> int:
     print("Resolve with `sdd module verify <id> --reset` (re-install from source) "
           "or `--accept` (record current state as new baseline).")
     return 1
+
+
+def _module_policy_gate(args, repo_root, action: str) -> int | None:
+    """Run Wave 26 §25 #1 policy gate before installing/updating a module.
+
+    Returns `None` to proceed with the install, or an exit code to abort.
+    """
+    from sdd.policy.gate import gate_install, read_module_capabilities
+
+    module_name = getattr(args, "module_name", None)
+    if not module_name:
+        return None
+
+    module_dir = repo_root / ".sdd-modules" / "modules" / module_name
+    caps = read_module_capabilities(module_dir) if module_dir.exists() else []
+
+    explain = bool(getattr(args, "explain_policy", False))
+
+    return gate_install(
+        repo_root,
+        category="modules",
+        identifier=module_name,
+        manifest_capabilities=caps,
+        explain=explain,
+    )

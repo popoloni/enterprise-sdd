@@ -5,6 +5,19 @@ mode: agent
 
 **Implement the feature** defined in the specification artifacts.
 
+## Wave 23 §23.B.2 — Constitution Re-Injection (mandatory)
+
+> **Before any other step**, the implementing agent must re-read the project
+> constitution. The constitution loaded in Phase 0 has likely drifted out of
+> context by the time implementation begins; re-injecting it at write time
+> closes the governance gap surfaced by Spec Kit v0.8.6.
+
+Open and read in full: `@file:.specify/memory/constitution.md`
+
+Surface the 7 articles as a checklist in your first response, then verify that
+each artifact you are about to write honours each article. Ask before guessing
+when an article is silent.
+
 ## Steps
 
 1. Read the spec artifacts to understand feature requirements:

@@ -40,9 +40,16 @@ def add_status_parser(subparsers: argparse._SubParsersAction) -> None:  # type: 
         default=False,
         help="render a phase execution ledger from existing gate artifacts (read-only; does not modify .specify/ artifacts)",
     )
+    from sdd.io import add_json_flags
+    add_json_flags(p)
 
 
 def run_status(args: argparse.Namespace) -> int:
+    from sdd.io import wrap_envelope
+    return wrap_envelope(args, "status", lambda: _run_status_inner(args))
+
+
+def _run_status_inner(args: argparse.Namespace) -> int:
     try:
         repo_root = find_repo_root()
     except FileNotFoundError as exc:
@@ -61,7 +68,32 @@ def run_status(args: argparse.Namespace) -> int:
 
     try:
         result = subprocess.run(cmd, env=get_env(repo_root), cwd=repo_root)
-        return result.returncode if result.returncode in (0, 1) else 2
+        rc = result.returncode if result.returncode in (0, 1) else 2
     except Exception as exc:
         output.error(str(exc))
         return 2
+
+    # Wave 23 §23.B.7 — append per-artifact drift indicators when a feature id
+    # is provided. Best-effort; never alters the exit code.
+    if args.feature_id:
+        try:
+            from sdd.utils import artifact_integrity
+
+            ledger = artifact_integrity.load_ledger(repo_root)
+            prefix = f".specify/specs/{args.feature_id}/"
+            tracked = {k: v for k, v in ledger.items() if k.startswith(prefix)}
+            if tracked:
+                print()
+                print("Artifact integrity (Wave 23 §23.B.7):")
+                for rel in sorted(tracked):
+                    status = artifact_integrity.status_for_artifact(repo_root, rel)
+                    marker = {
+                        "unchanged": "✓ unchanged",
+                        "drift": "⚠ drift detected",
+                        "missing": "❌ missing",
+                        "untracked": "· untracked",
+                    }.get(status, status)
+                    print(f"  {marker:<20} {rel}")
+        except Exception:
+            pass
+    return rc

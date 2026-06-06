@@ -7,15 +7,18 @@
 
 ---
 
-## 1. Specification Compliance
+## 1. Pass 1 — Spec Compliance
+
+> Pass 1 must pass before Pass 2 (Code Quality) is evaluated. If any AC fails verification,
+> the review stops here with `CHANGES REQUIRED`.
 
 ### 1.1 User Stories
 
-| Story | Acceptance Criteria | Verified | Verifier |
-|-------|---------------------|----------|----------|
-| US-001 | All ACs implemented | [ ] | |
-| US-002 | All ACs implemented | [ ] | |
-| US-003 | All ACs implemented | [ ] | |
+| Story | Acceptance Criteria | Pass/Fail | Evidence (test name, file, line) | Verifier |
+|-------|---------------------|-----------|----------------------------------|----------|
+| US-001 | All ACs implemented | [ ] | | |
+| US-002 | All ACs implemented | [ ] | | |
+| US-003 | All ACs implemented | [ ] | | |
 
 ### 1.2 Non-Functional Requirements
 
@@ -32,11 +35,7 @@
 | EC-001 | [ ] | TC-005 |
 | EC-002 | [ ] | TC-006 |
 
----
-
-## 2. Code Quality
-
-### 2.1 Tests
+### 1.4 Test Coverage (spec-driven)
 
 - [ ] All unit tests passing
 - [ ] All integration tests passing
@@ -48,7 +47,16 @@
 - New code: __%
 - Critical paths: 100%
 
-### 2.2 Code Standards
+**Pass 1 Verdict:** ✅ PASS | ❌ FAIL (list failing ACs)
+
+---
+
+## 2. Pass 2 — Code Quality
+
+> Evaluated only after Pass 1 passes. For trivial-complexity features (≤ 1 US, ≤ 3 files,
+> no new domain entities), Pass 1 and Pass 2 are evaluated together in a single pass.
+
+### 2.1 Code Standards
 
 - [ ] No TypeScript errors
 - [ ] No ESLint errors/warnings
@@ -56,7 +64,7 @@
 - [ ] No `console.log` in production code
 - [ ] No `any` types without justification
 
-### 2.3 Code Review
+### 2.2 Code Review
 
 - [ ] Code review completed
 - [ ] All review comments addressed

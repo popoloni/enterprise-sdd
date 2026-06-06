@@ -18,6 +18,7 @@ Before proposing or planning ANY improvement to Enterprise SDD, these principles
 7. **Team-oriented** — Enterprise SDD targets teams, not solo developers. Team collaboration, shared state, review gates are features.
 8. **Tech-agnostic** — Domain knowledge belongs in constitution or `.instructions.md` files, NOT hardcoded in agents.
 9. **Human-readable agent files** — The agent-based model is SDD's differentiator. Never propose replacing agents with programmatic state machines.
+10. **Single dispatch per command** — Interactive and any future autonomous variants of an SDD command share one dispatch implementation; the difference is **policy + renderer**, not **code path**. Forking dispatch for guided vs. auto / interactive vs. CI / human vs. agent is a type-system-level bug that calcifies into multi-month parity gaps (see §8 Design Boundaries — "Dual dispatch paths" row, Wave 26 §25 #4, evidence: GSD-2 v3.0.0 #5786–#5789).
 
 ## Design Boundaries — What NOT to Adopt
 

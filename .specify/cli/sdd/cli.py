@@ -10,6 +10,7 @@ from sdd.commands.new import add_new_parser, run_new
 from sdd.commands.gate import add_gate_parser, run_gate
 from sdd.commands.status import add_status_parser, run_status
 from sdd.commands.analyze import add_analyze_parser, run_analyze
+from sdd.commands.trace import add_trace_parser, run_trace
 from sdd.commands.report import add_report_parser, run_report
 from sdd.commands.resume import add_resume_parser, run_resume
 from sdd.commands.bridge import add_bridge_parser, run_bridge
@@ -29,6 +30,9 @@ from sdd.commands.retrospect import add_retrospect_parser, run_retrospect
 from sdd.commands.spike import add_spike_parser, run_spike
 from sdd.commands.ingest import add_ingest_parser, run_ingest
 from sdd.commands.doctor import add_doctor_parser, run_doctor
+from sdd.commands.accept_drift import add_accept_drift_parser, run_accept_drift
+from sdd.commands.diff_drift import add_diff_drift_parser, run_diff_drift
+from sdd.commands.schema import add_schema_parser, run_schema
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -57,6 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_gate_parser(subparsers)
     add_status_parser(subparsers)
     add_analyze_parser(subparsers)
+    add_trace_parser(subparsers)
     add_report_parser(subparsers)
     add_resume_parser(subparsers)
     add_bridge_parser(subparsers)
@@ -76,6 +81,9 @@ def build_parser() -> argparse.ArgumentParser:
     add_spike_parser(subparsers)
     add_ingest_parser(subparsers)
     add_doctor_parser(subparsers)
+    add_accept_drift_parser(subparsers)
+    add_diff_drift_parser(subparsers)
+    add_schema_parser(subparsers)
 
     return parser
 
@@ -90,6 +98,7 @@ def main() -> None:
         "gate": run_gate,
         "status": run_status,
         "analyze": run_analyze,
+        "trace": run_trace,
         "report": run_report,
         "resume": run_resume,
         "bridge": run_bridge,
@@ -109,6 +118,9 @@ def main() -> None:
         "spike": run_spike,
         "ingest": run_ingest,
         "doctor": run_doctor,
+        "accept-drift": run_accept_drift,
+        "diff-drift": run_diff_drift,
+        "schema": run_schema,
     }
 
     handler = dispatch.get(args.command)

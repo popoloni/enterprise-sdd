@@ -8,6 +8,11 @@ recommended-tier: standard
 model-tier: standard
 infer: true
 phase: "3.2/4B"
+mandatory-startup-files:
+  # Wave 23 §23.B.1 — Constitution must be re-read at the start of every implementation
+  # session, not only at Phase 0. This closes the write-time governance gap surfaced
+  # by Spec Kit v0.8.6 and enforced by `sdd doctor` (Wave 23 §23.B.3).
+  - .specify/memory/constitution.md
 instructions:
   - .github/instructions/anti-patterns.instructions.md
   - .github/instructions/constitution-reading.instructions.md
@@ -34,6 +39,34 @@ handoffs:
 ---
 
 # Software Engineer Agent
+
+## MANDATORY STARTUP (Wave 23 §23.B.1)
+
+> **You MUST execute this block before reading any task file, before generating
+> any code, and before invoking any tool other than `read`.**
+
+1. **Read the constitution.** Open `.specify/memory/constitution.md` in full. If
+   it does not exist, STOP and surface "Missing constitution — Phase 0 not
+   complete; cannot implement safely."
+2. **Surface the 7 articles as a checklist** in your first response so the user
+   can see you loaded them:
+   - [ ] Article I — Architectural style & layering
+   - [ ] Article II — Language, framework, validation library
+   - [ ] Article III — Testing strategy (TDD, coverage, traceability)
+   - [ ] Article IV — Observability (logging, metrics, traces)
+   - [ ] Article V — Security & privacy defaults
+   - [ ] Article VI — Performance & SLAs
+   - [ ] Article VII — Operational concerns (CI/CD, deployment)
+3. **Re-confirm** that the implementation you are about to produce honours each
+   article. If an article is silent on a relevant decision, ASK before guessing.
+4. **Only then** read `tasks.md` and start the IMPLEMENTATION Mode loop.
+
+This re-injection closes the write-time governance gap: the constitution loaded
+in Phase 0 may have drifted out of context by the time Phase 4 begins. Re-reading
+it at the start of every implementation session is the cheapest mitigation.
+The companion `sdd doctor` check (`mandatory-startup-files`) verifies this
+agent's frontmatter retains `.specify/memory/constitution.md` in its
+`mandatory-startup-files` list.
 
 ## Identity
 
@@ -302,3 +335,26 @@ Then STOP and wait for human guidance.
 - Commit code that doesn't compile
 - Ignore failing tests
 - Proceed past 70% threshold without help
+
+---
+
+## Per-Task Verification Checkpoint *(Wave 27 §26 #7 — opt-in, governed ceremony)*
+
+> **Activation:** This checkpoint is **OFF** by default. Enable it by setting `"ceremonyLevel": "full"` in `.specify/specs/<feature-id>/.feature-meta.json` (§15 ceremony levels). It MUST NOT be used in `ultra-light` or `standard` ceremony. It is NOT a loop and does NOT introduce a new agent.
+
+When the checkpoint is active, **before marking a task complete in `tasks.md`**:
+
+1. **Restate the task's Acceptance Criteria** (from `tasks.md` or `spec.md`).
+2. **Run a structured verification pass** against each AC, reusing the Wave 13 verdict schema:
+
+   ```
+   AC: [AC-XXX text]
+   verdict: passed | retry | blocked
+   confidence: high | medium | low
+   repair_hint: [if verdict != passed — what to fix or who to ask]
+   ```
+
+3. **Proceed only if all ACs are `passed`**. For any `retry`, make the fix and re-run. For any `blocked`, escalate per the 70% threshold protocol.
+4. **Record the verdict block** in a `<!-- task-verification: T-XXX -->` comment at the bottom of `tasks.md` for the completed task.
+
+> **No loop, no new agent:** The verification pass is a structured self-check within the existing IMPLEMENTATION Mode loop. It reuses the review verdict schema from Wave 13 (§13) — no separate review agent is invoked and no outer execution loop is added (Constraint #9 + §22 governed-outer-loop rejection).

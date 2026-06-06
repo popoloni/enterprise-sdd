@@ -177,6 +177,38 @@ Follow these phases in order. Each phase has a clear goal and exit criteria.
 
 **Exit when:** All features have complete architectural designs, impact analysis done for EXTEND/HYBRID.
 
+### Phase 4b: Task Boundary & Dependency Annotations
+
+**Goal:** Annotate each task with its architectural boundary and prerequisite dependencies,
+enabling automated boundary-violation detection during review.
+
+**Activities:**
+- For each task in the task breakdown, emit a `_Boundary:_` annotation declaring which
+  component, module, or layer the task may touch. Tasks that modify files outside their
+  declared boundary will be flagged during review as potential architectural drift.
+- For each task, emit a `_Depends:_` annotation listing prerequisite task IDs that must
+  complete before this task can start.
+- Boundary annotations are **required** for medium and high complexity features (per
+  progressive planning assessment). For trivial-complexity features, they are optional.
+
+**Annotation format:**
+```markdown
+### T004 [P] - Implement Create Operation
+
+_Boundary: OrderService, OrderRepository_
+_Depends: T001, T002_
+
+**Description:** ...
+```
+
+**Boundary granularity guidelines:**
+- Use component/module names (e.g., `AuthService`, `UserRepository`, `OrderModule`)
+- For cross-cutting tasks, list all affected components (e.g., `_Boundary: AuthService, AuditLogger, SecurityMiddleware_`)
+- The boundary is a contract — the reviewer will flag files modified outside these components
+
+**Exit when:** Every task has `_Boundary:_` and `_Depends:_` annotations (or annotations are
+omitted for trivial-complexity features with documented justification).
+
 ### Phase 5: Cross-Cutting Concerns & Validation
 
 **Goal:** Ensure consistency across features and address system-wide concerns.
@@ -197,9 +229,33 @@ Follow these phases in order. Each phase has a clear goal and exit criteria.
 - ✅ NFRs addressed
 - ✅ Backward compatibility confirmed for EXTEND features
 - ✅ Mermaid diagrams included
+- ✅ Synthesis Assessment completed (3 lenses)
 - ✅ User has confirmed the approach
 
 **Exit when:** Checklist passes, plan.md written, ready for handoff.
+
+## Synthesis Assessment
+
+Before finalizing the design, evaluate it through three mandatory lenses. Include the
+assessment as a `## Synthesis Assessment` section in `plan.md` / `design.md`.
+
+### Lens 1 — Generalization
+> Can this pattern be reused across other features or projects?
+
+Produce a 1-sentence assessment: identify reusable patterns and whether they should be
+extracted as shared components, libraries, or templates.
+
+### Lens 2 — Build-vs-Adopt
+> Should we build this custom, or adopt an existing library/service?
+
+Produce a 1-sentence assessment: for each major component, state whether building or
+adopting is recommended and why.
+
+### Lens 3 — Simplification
+> Can this design be made simpler without sacrificing requirements?
+
+Produce a 1-sentence assessment: identify any over-engineering, unnecessary abstraction
+layers, or complexity that can be removed.
 
 ## Schema Representation Rules
 

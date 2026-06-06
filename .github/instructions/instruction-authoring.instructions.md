@@ -9,6 +9,7 @@ description: Authoring contract for instruction and skill sizing, co-location, a
 
 - Global or directory-scoped instruction files (`*.instructions.md`) must be **<= 50 lines**.
 - Skill files (`SKILL.md`) must be **<= 80 lines**.
+- Frontmatter `description:` fields (agents, instructions, prompts, skills) must be **<= 100 chars (WARN)** and **<= 200 chars (ERROR)** — Wave 23 §23.A.19.
 - If content exceeds the limit, split into:
   - a compact **core** file with mandatory operational rules
   - an optional **detail/catalog** companion referenced from the core

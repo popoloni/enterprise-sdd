@@ -1,3 +1,8 @@
+---
+# Wave 23 §23.A.9/§23.A.10 — memory frontmatter for time-decay ranking
+last_referenced_at: "2026-04-11T16:24:38.141201+00:00"
+reference_count: 0
+---
 ﻿# Session State
 
 > **Auto-updated** by gate scripts and agents. Manual edits are allowed.

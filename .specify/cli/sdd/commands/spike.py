@@ -9,6 +9,7 @@ from pathlib import Path
 
 from sdd.utils.config import find_repo_root
 from sdd.utils import output
+from sdd.io import atomic_write_text
 
 
 def add_spike_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
@@ -60,15 +61,15 @@ def _start(args: argparse.Namespace) -> int:
         content = template.read_text(encoding="utf-8")
         content = content.replace("{{SPIKE_NAME}}", slug)
         content = content.replace("[date]", datetime.now().strftime("%Y-%m-%d"))
-        target.write_text(content, encoding="utf-8")
+        atomic_write_text(target, content)
     else:
         # Fallback: create a minimal spike file
-        target.write_text(
+        atomic_write_text(
+            target,
             f"# Spike: {slug}\n\n"
             f"**Created:** {datetime.now().strftime('%Y-%m-%d')}\n\n"
             f"## Hypothesis\n\n## Approach\n\n## Success Criteria\n\n"
             f"## Time-box\n\n## Findings\n",
-            encoding="utf-8",
         )
 
     output.success(f"Spike '{slug}' created at {spikes_dir}")
@@ -110,7 +111,7 @@ def _wrap(args: argparse.Namespace) -> int:
     wrap_line = f"\n\n---\n**Wrapped:** {datetime.now().strftime('%Y-%m-%d')}\n"
     if "**Wrapped:**" not in content:
         content += wrap_line
-        spike_file.write_text(content, encoding="utf-8")
+        atomic_write_text(spike_file, content)
 
     output.success(f"Spike '{slug}' wrapped. Review findings at {spike_file}")
     output.info("If proceeding, create a feature spec with `sdd new` incorporating the spike findings.")

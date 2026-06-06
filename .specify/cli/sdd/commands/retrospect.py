@@ -6,6 +6,7 @@ import argparse
 
 from sdd.utils.config import find_repo_root
 from sdd.utils import output
+from sdd.io import atomic_write_text
 
 _TEMPLATE = """\
 # Feature Retrospective
@@ -137,9 +138,9 @@ def run_retrospect(args: argparse.Namespace) -> int:
         output.info("Edit it directly or use --feature with a different slug.")
         return 1
 
-    retro_file.write_text(
+    atomic_write_text(
+        retro_file,
         _TEMPLATE.replace("{slug}", feature_slug),
-        encoding="utf-8",
     )
     output.success(f"Retrospective template saved: {retro_file.relative_to(repo_root)}")
     return 0
@@ -220,7 +221,7 @@ def _run_extract(feature_slug: str) -> int:
 - [Review the feature artifacts above to populate this section]
 """
 
-    learnings_path.write_text(learnings_content, encoding="utf-8")
+    atomic_write_text(learnings_path, learnings_content)
     output.success(f"Learnings extracted: {learnings_path.relative_to(repo_root)}")
     output.info(f"Mined {len(artifacts)} artifacts, {len(stuck_files)} stuck records, {len(escalation_files)} escalations")
     return 0

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from sdd.utils.config import find_repo_root
 from sdd.utils import output
+from sdd.io import atomic_write_text
 
 
 def add_context_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
@@ -153,7 +154,7 @@ def _compile(args: argparse.Namespace) -> int:
     lines.append(f"Most recent gate passed: **Gate {last_gate}**\n\n")
     lines.append(f"Suggested next step: {next_phase}\n\n")
 
-    output_file.write_text("".join(lines), encoding="utf-8")
+    atomic_write_text(output_file, "".join(lines))
     output.success(f"Context cache written: {output_file.relative_to(repo_root)}")
     return 0
 

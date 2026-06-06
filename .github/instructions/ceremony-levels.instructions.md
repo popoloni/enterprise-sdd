@@ -20,3 +20,13 @@ Read `.specify/specs/<feature>/.feature-meta.json` before producing output and u
 - Full ceremony requires stricter review, clarification, and low-confidence cleanup.
 
 See [ceremony-level-checklists.instructions.md](ceremony-level-checklists.instructions.md) for per-level artifact expectations, gate behavior, and context-budget guidance.
+
+## Ceremony-Gated Features
+
+Some SDD capabilities are **off by default** and activated only at the `full` ceremony level:
+
+| Feature | Level required | Where documented |
+|---------|---------------|-----------------|
+| Per-task verification checkpoint (Wave 27 §26 #7) | `full` | `software-engineer.agent.md` § Per-Task Verification Checkpoint |
+
+> **Rationale:** Proportional ceremony (§15) keeps overhead low for the majority of work while allowing full discipline for high-risk delivery without changing the underlying mechanics.

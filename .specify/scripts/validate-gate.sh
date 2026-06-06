@@ -747,12 +747,60 @@ check_autonomy_provenance() {
 validate_gate_1() {
     local feature_dir="$1"
     local errors=0
+    local is_delta=false
     
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "  🚪 Gate 1: Three Amigos Review"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
+    
+    # Delta-spec detection: if delta-spec.md exists, use delta validation path
+    if [ -f "$feature_dir/delta-spec.md" ]; then
+        is_delta=true
+        echo "Checking: Delta specification completeness"
+        echo ""
+        log_info "Delta spec detected — using reduced-ceremony validation"
+        
+        check_file_exists "$feature_dir/delta-spec.md" "delta-spec.md" || ((errors++))
+        check_file_not_template "$feature_dir/delta-spec.md" "delta-spec.md" || ((errors++))
+        
+        # Validate required fields based on change_type
+        if grep -qi "MODIFIED\|RENAMED" "$feature_dir/delta-spec.md" 2>/dev/null; then
+            log_info "Change type MODIFIED/RENAMED — checking 'before' field:"
+            if ! grep -q "## Before State" "$feature_dir/delta-spec.md" || \
+               grep -A2 "## Before State" "$feature_dir/delta-spec.md" | grep -q '\[Describe'; then
+                log_error "'Before State' section is required and must be filled for MODIFIED/RENAMED changes"
+                ((errors++))
+            else
+                log_success "'Before State' section is present and filled"
+            fi
+        fi
+        
+        if grep -qi "REMOVED" "$feature_dir/delta-spec.md" 2>/dev/null; then
+            log_info "Change type REMOVED — checking 'justification' field:"
+            if ! grep -q "## Justification" "$feature_dir/delta-spec.md" || \
+               grep -A2 "## Justification" "$feature_dir/delta-spec.md" | grep -q '\[Rationale'; then
+                log_error "'Justification' section is required and must be filled for REMOVED changes"
+                ((errors++))
+            else
+                log_success "'Justification' section is present and filled"
+            fi
+        fi
+        
+        # Impact assessment is always required
+        log_info "Impact assessment:"
+        if ! grep -q "## Impact Assessment" "$feature_dir/delta-spec.md"; then
+            log_error "'Impact Assessment' section is missing"
+            ((errors++))
+        else
+            log_success "'Impact Assessment' section is present"
+        fi
+        
+        echo ""
+        return $errors
+    fi
+    
     echo "Checking: Do we all share the same understanding?"
     echo ""
     
@@ -801,6 +849,21 @@ validate_gate_2() {
     log_info "Contract validation (optional):"
     check_openapi_valid "$feature_dir/contracts/openapi.yaml"
     check_asyncapi_valid "$feature_dir/contracts/asyncapi.yaml"
+
+    # Wave 23 §C.4: Hidden Requirement Candidates section must be present in clarifications.md
+    log_info "Hidden requirement scan:"
+    local clar_file="$feature_dir/clarifications.md"
+    if [[ -f "$clar_file" ]]; then
+        if grep -qi '## Hidden Requirement Candidates' "$clar_file" 2>/dev/null; then
+            log_success "Hidden Requirement Candidates section present in clarifications.md"
+        else
+            log_error 'clarifications.md missing "## Hidden Requirement Candidates" section'
+            log_check 'Run the hidden-requirement-scan skill or add the section manually before Gate 2'
+            ((errors++))
+        fi
+    else
+        log_warning "clarifications.md not found — cannot verify hidden-requirement scan"
+    fi
 
     # Wave 6: Check for excessive unresolved markers
     log_info "Clarification markers:"

@@ -123,6 +123,25 @@ sdd init --dry-run
 sdd skill validate-mapping
 ```
 
+## Choosing an Install Profile *(Wave 23 §23.A.15–§23.A.18)*
+
+`sdd init` supports three mutually-exclusive install profiles. The profile is recorded in `.specify/install-profile.json` and influences the cold-start surface and `sdd doctor --suggest-upgrade` recommendations.
+
+| Profile | Tier | When to use |
+|---------|------|-------------|
+| `--minimal` | 1 | Solo experimentation, tiny repos, hackathons. Just the cold-start surface, no optional modules. |
+| (default) `--full` | 3 | Teams adopting the full Enterprise SDD workflow, including all phases, agents, gates, modules. |
+| `--upgrade` | promote to ≥ 2 | Existing minimal install that has outgrown tier 1; no-op if already at tier ≥ 2. |
+
+```bash
+sdd init --minimal               # smallest install
+sdd init                         # default = --full
+sdd init --upgrade               # promote tier
+sdd doctor --suggest-upgrade     # recommend a tier bump based on usage
+```
+
+After installation, `sdd skill list` shows the cold-start surface (6 namespace meta-skills); `sdd skill list --flat` lists every skill on disk.
+
 ## Troubleshooting
 
 - If `sdd` is not found: verify `pip install -e .../.specify/cli` completed in the active Python environment.

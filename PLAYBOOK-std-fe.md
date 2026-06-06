@@ -139,3 +139,28 @@ flowchart TB
 | Frontend microfrontend (Convergence stack) | `std-fe` only |
 | End-to-end product stream (backend + FE) | `core-be` + `std-fe` |
 | Full multi-frontend workspace | All three modules |
+
+---
+
+## FE Design Contract *(Wave 27 §26 #6)*
+
+Every feature in `std-fe` that requires UI design work uses a **two-spine contract** to seal the design→engineering handoff:
+
+| Spine | Template | Role |
+|-------|----------|---------|
+| **DESIGN** | `.specify/templates/design-tokens-template.md` | Visual identity — named color, spacing, typography, motion, and elevation tokens |
+| **EXPERIENCE** | `.specify/templates/experience-template.md` | Flows, states, IA, a11y — references design tokens via `{design-tokens.TOKEN}` syntax |
+
+### Workflow
+
+1. During Phase 2 (Design), copy both templates into the feature spec folder:
+   ```bash
+   cp .specify/templates/design-tokens-template.md .specify/specs/NNN/design-tokens.md
+   cp .specify/templates/experience-template.md     .specify/specs/NNN/experience.md
+   ```
+2. Fill `design-tokens.md` first — define every named token.
+3. Fill `experience.md`, referencing tokens as `{design-tokens.color.primary.default}` etc.
+4. Run `sdd extension doctor <your-extension-path>` to check for unresolved `{design-tokens.*}` references. Unresolved references produce a **WARN**.
+5. The Handoff Checklist in `experience-template.md` §8 must be complete before Gate 2.
+
+> **Constraint #8:** The design-contract templates are scoped to `std-fe` and `aws-fe` only. The tech-agnostic SDD core is unchanged.

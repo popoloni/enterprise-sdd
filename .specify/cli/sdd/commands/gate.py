@@ -72,9 +72,16 @@ def add_gate_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ig
         default=False,
         help="activate the RTC reasoning protocol for review/security-reviewer agents during this gate validation",
     )
+    from sdd.io import add_json_flags
+    add_json_flags(p)
 
 
 def run_gate(args: argparse.Namespace) -> int:
+    from sdd.io import wrap_envelope
+    return wrap_envelope(args, "gate", lambda: _run_gate_inner(args))
+
+
+def _run_gate_inner(args: argparse.Namespace) -> int:
     try:
         repo_root = find_repo_root()
     except FileNotFoundError as exc:
@@ -142,7 +149,20 @@ def run_gate(args: argparse.Namespace) -> int:
         env["SDD_WITH_REASONING"] = "1"
     try:
         result = subprocess.run(cmd, env=env, cwd=repo_root)
-        return result.returncode if result.returncode in (0, 1) else 2
+        rc = result.returncode if result.returncode in (0, 1) else 2
     except Exception as exc:
         output.error(str(exc))
         return 2
+
+    # Wave 23 §23.B.5 — record artifact-integrity hashes for any artifacts the
+    # gate produced. Best-effort; never blocks success.
+    if rc == 0:
+        try:
+            from sdd.utils import artifact_integrity
+
+            artifact_integrity.record_phase_artifacts(
+                repo_root, str(feature_id), phase=str(gate_n), written_by=f"sdd-gate-{gate_n}"
+            )
+        except Exception:
+            pass
+    return rc

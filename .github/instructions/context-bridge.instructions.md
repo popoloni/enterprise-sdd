@@ -43,3 +43,8 @@ history. This ensures agents get clean, relevant context regardless of conversat
 The context bridge is regenerated on demand (via `sdd bridge`). If the bridge file's
 timestamp is older than the newest artifact, agents should note: "Context bridge may
 be stale — recommend re-running `sdd bridge <feature-id>`."
+
+### Fix Attempt Tracking — `fix_attempt_count`
+
+Tracks consecutive fix attempts without test improvement for loop detection.
+See `context-bridge-detail.instructions.md` for schema and escalation thresholds.

@@ -1,3 +1,9 @@
+---
+# Wave 23 §23.A.9/§23.A.10 — memory frontmatter for time-decay ranking
+last_referenced_at: "2026-04-14T21:22:22.712336+00:00"
+reference_count: 0
+decay_floor: true
+---
 # Project Constitution: [PROJECT_NAME]
 
 **Version:** 1.0

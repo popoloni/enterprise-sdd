@@ -21,3 +21,5 @@ Curated skills are stored under `.github/skills/`.
 - sdd skill validate <name>
 - sdd skill run <name> <feature-id> [--dry-run]
 - sdd skill validate-mapping
+- sdd skill install <path> [--explain-policy]
+- sdd skill adopt <path>

@@ -1,6 +1,6 @@
 # Enterprise SDD Workflow
 
-> **v4.7** — April 26, 2026
+> **v4.9** — May 15, 2026
 
 A comprehensive Spec-Driven Development (SDD) workflow for enterprise teams, featuring AI-assisted specification, design, and implementation with quality gates and traceability.
 
@@ -136,7 +136,7 @@ Use this documentation set by intent:
 - **Automated CI/CD workflows** for gate enforcement
 - **MCP Servers** for enhanced context and tool access
 - **Full Traceability** from requirements to implementation
-- **Python CLI** (`sdd`) for VS Code-free operation — including `sdd init`, `sdd new` (`--progressive`), `sdd gate` (`--hooks`, `--convergence`), `sdd status` (`--autonomy`, `--graph`, `--escalations`), `sdd analyze` (`--gaps`), `sdd report` (`--format md|docx|xlsx|pptx`), `sdd resume`, `sdd bridge`, `sdd adapters generate`, `sdd module`, `sdd preset` (`apply --wrap`, `show --resolved`), `sdd sync`, `sdd spell`, `sdd route`, `sdd ship`, `sdd memory`, `sdd extension`, `sdd skill` (`list|validate|run|validate-mapping`), `sdd autonomy status`, `sdd context compile` (`--section`), `sdd retrospect` (`--extract`), `sdd spike` (`start|wrap`), `sdd ingest`, and `sdd doctor`
+- **Python CLI** (`sdd`) for VS Code-free operation — including `sdd init` (`--minimal`, `--upgrade` [`--preview`], `--full`), `sdd new` (`--progressive`, `--from-brief`), `sdd gate` (`--hooks`, `--convergence`), `sdd status` (`--autonomy`, `--graph`, `--escalations`), `sdd analyze` (`--gaps`, `--provenance`), `sdd trace` (`--reverse`, `--json`), `sdd report` (`--format md|docx|xlsx|pptx`), `sdd resume`, `sdd bridge`, `sdd adapters generate`, `sdd module` (`adopt`), `sdd preset` (`apply --wrap`, `show --resolved`), `sdd sync`, `sdd spell`, `sdd route`, `sdd ship`, `sdd memory` (`list --duplicates`), `sdd extension`, `sdd skill` (`list|validate|run|validate-mapping|adopt|install`), `sdd autonomy status`, `sdd context compile` (`--section`), `sdd retrospect` (`--extract`), `sdd spike` (`start|wrap`), `sdd ingest`, and `sdd doctor` (`--registry-audit`)
 - **Multi-IDE Adapters** for VS Code/Copilot, Cursor, Claude Code, Windsurf, and Codex — generated from a single canonical source via `sdd adapters generate`
 - **Extension System** with lifecycle hooks in `.sdd-extensions/`
 - **Tailored Frontend Extension Specialization** with namespace enforcement (`fe` / `aws-fe`) and conflict diagnostics
@@ -162,6 +162,14 @@ Use this documentation set by intent:
 - **Hidden Unicode Scanning** via `sdd doctor --scan-unicode` and `sdd module install` pre-write scan — detects Tag Characters, Bidi Overrides, Zero-Width, Variation Selectors, Invisible Operators, and Deprecated Formatting codepoints
 - **SARIF CI Gate Output** via `sdd doctor --format sarif` for GitHub Code Scanning integration, with 6 defined rule IDs and a ready-to-use CI workflow example
 - **APM Coexistence** documented directory ownership model for projects using both Enterprise SDD and Microsoft APM side by side
+- **Reverse Traceability** via `sdd trace --reverse <path>` — inverts the US→AC→TC→Task→Code chain to answer "what authorized this file?"; exits `1` on an untracked path and supports `--json` (Wave 27 §26 #2)
+- **Provenance Gap Analysis** via `sdd analyze --provenance` — bulk listing of untraced files on disk with no authorizing task (the reverse complement of `--gaps`) (Wave 27 §26 #2)
+- **Derived Dedup Memory Index** — a disposable `.specify/memory/.index.json` that dedupes and cross-links decisions/lessons while markdown stays canonical; `sdd memory list --duplicates` surfaces collisions and `sdd doctor` rebuilds it (Wave 27 §26 #1)
+- **Unmanaged-Artifact Audit** via `sdd doctor --registry-audit` — flags hand-dropped skills/modules/extensions with no `registry.json` entry as UNMANAGED; `--strict` fails closed in CI with SARIF rule `sdd-unmanaged-artifact`; `sdd module adopt` / `sdd skill adopt` bring them under registry control after review (Wave 27 §26 #3)
+- **Intent-Kernel On-Ramp** — the `intent-kernel` skill distils a raw brief/brain-dump/ticket into a 5-field kernel (Problem, Capabilities, Constraints, Non-goals, Success signal); `sdd new --from-brief <file>` seeds the Phase 1 spec from it without ever bypassing Gate 1 (Wave 27 §26 #4)
+- **Agent Activation Discipline** via `agent-activation-discipline.instructions.md` — ordered `mandatory-startup-files` reads, no inference of startup-file values, and a one-line confirmation per step (Wave 27 §26 #5)
+- **FE Design Contract** — paired `design-tokens-template.md` (visual identity) + `experience-template.md` (flows/states/IA/a11y) for the `std-fe`/`aws-fe` modules, with an `{design-tokens.TOKEN}` reference-integrity WARN in the FE extension diagnostics (Wave 27 §26 #6)
+- **Deprecation Auto-Migration** — `sdd init --upgrade` migrates past-gate deprecated artifacts; `--preview` dry-runs the plan and writes a per-change audit log; `sdd doctor` WARNs when a past-gate artifact lingers (Wave 27 §26 #8)
 
 ## Quick Start
 
@@ -228,6 +236,14 @@ sdd new user-authentication --template standard --dry-run
 
 This creates a numbered folder under `.specify/specs/` with the standard artifacts (`business-context.md`, `spec.md`, `clarifications.md`, `plan.md`, `test-cases.md`, `tasks.md`, `analysis-report.md`, `ship-checklist.md`, and `contracts/`).
 
+To start from a raw brain-dump, ticket, or transcript, seed the spec via the intent kernel:
+
+```bash
+sdd new user-authentication --from-brief brief.md
+```
+
+This runs the `intent-kernel` skill to distil the brief into a 5-field kernel (Problem, Capabilities, Constraints, Non-goals, Success signal) and pre-populates the Phase 1 spec scaffold. The kernel is an intake aid only — it never bypasses the spec or Gate 1.
+
 For CLI contract compatibility, the scaffold also includes `design.md` and `implementation.md` aliases so downstream tooling can target either naming convention.
 
 ### 3. Fill the Core Artifacts
@@ -266,6 +282,10 @@ Use `@test-engineer` and `@software-engineer` for code and tests, then `@review`
 - `sdd extension validate|doctor ...` to validate and diagnose extension manifests
 - `sdd skill run ...` to execute curated skills against a feature context
 - `sdd skill validate-mapping` to validate command-to-phase and curated prompt/skill alignment
+- `sdd trace --reverse <path>` to find the originating US→AC→TC→Task→spec chain for a tracked file (`--json` for CI)
+- `sdd analyze --provenance` to list untraced files on disk with no authorizing task
+- `sdd doctor --registry-audit` to flag unmanaged artifacts, then `sdd module adopt` / `sdd skill adopt` to register them
+- `sdd init --upgrade --preview` to dry-run the deprecation auto-migration before applying it
 
 ## Tailored Extension Architecture
 
@@ -392,6 +412,25 @@ The repository contains a broad Bash/PowerShell automation suite. The table belo
 > **CLI reference:** The Python CLI is documented in [PLAYBOOK.md](PLAYBOOK.md#cli-usage) and should be treated as the primary command interface.
 
 ## Available User Modules
+
+Enterprise SDD currently ships with the following user modules under `.sdd-modules/modules/`:
+
+| Module | Focus | Provides |
+|--------|-------|----------|
+| `core-be` | Java 21, Quarkus, DDD, Kafka backend patterns | Instructions, guidances, setup templates, prompts, constitution articles, agent patches |
+| `std-fe` | React 19, Vite, Stratos frontend patterns | Instructions, setup templates, agent patch |
+| `aws-fe` | React + Redux Toolkit + Stratos frontend workflows | Instructions, prompts, setup templates, agent patches |
+| `aidd` | Full-SDLC AI-driven development (IDE-agnostic) | 5 agents, 36 commands, 5 instructions, 2 skills, memory system |
+
+Quick usage:
+
+```bash
+sdd module list
+sdd module install core-be
+sdd module install std-fe
+sdd module install aws-fe
+sdd module install aidd
+```
 
 For the complete step-by-step module workflow, see [PLAYBOOK.md - User Modules](PLAYBOOK.md#user-modules).
 
@@ -548,7 +587,13 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | python server.py
 
 ## Development History
 
-The framework evolved through 22 development waves.
+The framework evolved through 23 development waves. The detailed execution plan and completion evidence are preserved in [_plan/MASTER-PLAN.md](_plan/MASTER-PLAN.md). Historical snapshots are archived under [_plan/outdated/](_plan/outdated/).
+
+- **Wave 23 Phase A — Cold-Start Optimisation (May 11, 2026):** 6 namespace meta-skills (`sdd-specify`, `sdd-architect`, `sdd-implement`, `sdd-review`, `sdd-doctor`, `sdd-module`) with on-demand routing to specialised sub-skills; `sdd skill list` now returns the cold-start surface (use `--flat` for the legacy view); time-decay memory ranking with `last_referenced_at`/`reference_count`/`decay_floor` frontmatter and `sdd memory list [--stale]`; `sdd bridge --explain` and `sdd bridge --context-check`/`sdd doctor --context` (token utilisation vs the active model window, WARN 60% / CRITICAL 70%); install profiles `sdd init --minimal | --upgrade | --full` writing `.specify/install-profile.json` and `sdd doctor --suggest-upgrade`; description-length budget (≤100 chars WARN / ≤200 chars ERROR) enforced by `sdd doctor --description-length`; lazy phase-prompt loader (`sdd-phase-loader.prompt.md`).
+- **Wave 22 — APM + Genesis Harvest (April 27, 2026):** Added `hidden-unicode-scan` instruction (6 Unicode codepoint categories); documented `sdd doctor --scan-unicode` and `--format sarif` with 6 SARIF rule IDs; created `sdd-doctor-ci.yml.example` CI workflow; added APM coexistence guide to `INSTALL-IN-NEW-PROJECT.md` (file ownership, directory layout, integrity verification separation, install order).
+- **Wave 21 — Agentic SDLC Handbook Harvest + Codebase Hygiene (April 27, 2026):** Added `instruction-authoring` and `session-discipline` instructions for context engineering discipline; extended `stuck-detection` with ADAPT recovery loop; added G2R metrics to PLAYBOOK; trimmed 18 oversized instructions to ≤ 50 lines (splitting 10 into core + companion pairs); created `api-patterns`, `messaging-patterns`, and `source-verification` skills; trimmed all 21 skills to ≤ 80 lines.
+- **Wave 20 — Multi-Framework Public Refresh (April 26, 2026):** Added `hotspot-review` and `prfaq-working-backwards` skills; introduced RTC reasoning instructions and `checkpoint-preview` prompt; shipped skill-eval harness (`sdd skill validate --eval`) with `skill-eval-template.yaml`; added post-merge gate (`sdd gate post-merge`) and custom-branch lock (`sdd new --on-branch`, `feature.lock.json`); added skill scoping via `.specify/skill-mapping.yaml` and `sdd skill list --scope <agent>`; introduced sha256-tracked module manifests with `sdd module verify --reset|--accept`; established CLI deprecation policy (`CLI-DEPRECATIONS.md`, `@deprecated` decorator, `cli-deprecation-policy.instructions.md`) wired into `sdd doctor`; added `--with-reasoning`, `--hotspots`, `--preview`, `--feature` CLI flags.
+- **Wave 19 — Agent Skills + VORTEX + Tailored FE Harvest (April 24, 2026):** Added `skill-authoring` and `source-verification` instructions for behavioral reliability; introduced `source-citation-check` and `jira-rest-ops` skills; added `release-triad-synthesis` prompt for Gate 4 triad synthesis; created `convergence-ddd-aggregate` optional module (DDD aggregate design); added `phase-ledger-template`, `gate4-release-packet-template`, and `jira-endpoint-map-template`; extended CLI with `--rationalizations`, `--synthesize`, and `--phase-ledger` flags.
 
 ## 📄 License
 

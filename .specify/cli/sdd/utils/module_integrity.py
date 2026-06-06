@@ -72,8 +72,9 @@ def load_registry(repo_root: Path) -> dict:
 
 
 def save_registry(repo_root: Path, data: dict) -> None:
+    from sdd.io import atomic_write_json
     path = repo_root / REGISTRY_PATH
-    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    atomic_write_json(path, data, sort_keys=False)
 
 
 def find_module(registry: dict, module_id: str) -> dict | None:

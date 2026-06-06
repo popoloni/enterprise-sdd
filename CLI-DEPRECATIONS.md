@@ -12,6 +12,27 @@
 
 ---
 
+## Auto-Migration on Upgrade (Wave 27 §26 #8)
+
+`sdd init --upgrade` performs an **auto-migration pass** over this catalog after
+the standard upgrade. For each **Active** entry whose `Removal Version` has been
+reached (relative to the framework's current version), the upgrade renames/removes
+the past-gate artifact and rewrites references to the `Replacement`. Entries whose
+removal gate has **not** been reached are left untouched.
+
+- `sdd init --upgrade --preview` is a **dry-run**: it prints the migration plan
+  (which catalog entries are past-gate and what would change) and writes nothing.
+- A confirmed `sdd init --upgrade` writes **one audit-log entry per migrated
+  change** to `.specify/upgrade-migration-audit.jsonl` (Constraint #6 +
+  migration-guide discipline).
+- `sdd doctor` emits a **WARN** when a past-gate deprecated artifact is still
+  present, pointing to `sdd init --upgrade` for remediation.
+
+The gate comparison reuses the `Removal Version` column below; keeping that column
+accurate is what drives both the auto-migration and the `sdd doctor` past-gate WARN.
+
+---
+
 ## Active Deprecations
 
 | ID | Flag / Sub-command / Env Var | Deprecated In | Removal Version | Replacement | Migration Link |

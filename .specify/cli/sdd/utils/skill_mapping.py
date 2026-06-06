@@ -82,3 +82,18 @@ def load_mapping(repo_root: Path) -> list[SkillEntry]:
 def filter_for_agent(entries: Iterable[SkillEntry], agent: str) -> list[SkillEntry]:
     """Return only the skills visible to `agent`."""
     return [e for e in entries if e.is_visible_to(agent)]
+
+
+def load_cold_start_surface(repo_root: Path) -> list[str]:
+    """Wave 23 §23.A.7 — load the namespace meta-skill ids that form the
+    default cold-start surface. Returns the ordered list declared under
+    `coldStartSurface:` in skill-mapping.yaml; empty list when absent.
+    """
+    path = repo_root / MAPPING_PATH
+    if not path.exists():
+        return []
+    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    surface = raw.get("coldStartSurface") or []
+    if not isinstance(surface, list):
+        return []
+    return [str(s) for s in surface]

@@ -1,8 +1,68 @@
 # Changelog — Enterprise SDD Workflow
 
-> **Last updated:** April 27, 2026
-> **Scope:** Full delivery history from initial implementation through Wave 22.
+> **Last updated:** June 6, 2026
+> **Scope:** Full delivery history from initial implementation through Wave 27 (complete).
 > **Source documents:** All entries are traced to planning, completion, and validation documents in [`_plan/`](_plan/).
+
+---
+
+## Wave 27 — Multi-Framework Public Refresh Harvest (June 6, 2026)
+
+> **Status:** ✅ Complete (Phases A/B/C/T/V/Z all delivered — 724 passed)
+> **Plan:** [`_plan/WAVE-27-PUBLIC-REFRESH-JUN06-IMPLEMENTATION-PLAN.md`](_plan/WAVE-27-PUBLIC-REFRESH-JUN06-IMPLEMENTATION-PLAN.md)
+> **Source:** June 6, 2026 multi-framework public-refresh harvest (§26) — 8 additive features from GSD-2 v3.0.0, APM v0.18.0, BMAD v6.8.0, AI-RPI v1.2.0, Spec Kit v0.10.0, OpenSpec v1.4.1, grouped into three coherent sub-tracks.
+
+### Phase A — Provenance & Integrity (✅ Complete — 15 tasks)
+
+- **§26 #1 — Derived dedup memory index (strangler-fig, ≤ 5 append-only PRs).** Added `memory-index.schema.json` and `sdd.utils.memory_index` builder producing a disposable `.specify/memory/.index.json` (one entry per decision/lesson with `id`, `source_file`, `source_anchor`, `kind`, `fingerprint` (sha256, reuse §23 #3), `last_referenced_at`/`reference_count` (reuse §23 #4), `duplicate_of`). Markdown stays canonical (Constraint #9). `sdd memory index` builds it, `sdd doctor` rebuilds/validates it (proves the disposable guarantee: delete → rebuild → identical), `sdd memory list --duplicates` surfaces collisions for human merge, and `sdd bridge` consumes the index to dedupe selection (authoritative record = highest `reference_count`, then most recent) with `--explain` annotation. `.index.json` is gitignored. Staging recorded in [`_plan/WAVE-27-MEMORY-INDEX-STRANGLER-LOG.md`](_plan/WAVE-27-MEMORY-INDEX-STRANGLER-LOG.md).
+- **§26 #2 — Reverse-traceability lookup.** Added `sdd trace --reverse <path>` (`sdd.utils.traceability`) that inverts the forward US→AC→TC→Task→Code chain into a `path → {task, AC, US, spec}` answer (exit `0` on a tracked path, `1` on an untracked path), `--json` conforming to the Wave 26 §B.8 `cli-output.schema.json` envelope, and `sdd analyze --provenance` for bulk untraced-file listing (the reverse complement of `--gaps`).
+- **§26 #3 — Unmanaged-artifact audit.** Added `sdd doctor --registry-audit` flagging on-disk skills/modules/extensions with no `.sdd-modules/registry.json` entry as UNMANAGED, `--strict` for fail-closed CI emitting SARIF rule `sdd-unmanaged-artifact`, and `sdd module adopt <path>` / `sdd skill adopt <path>` to register an artifact (hash + Unicode scan + policy-compliance) after review.
+
+### Phase B — Intake & Discipline (✅ Complete — 7 tasks)
+
+- **§26 #4 — Intent-distillation kernel.** Created `.github/skills/intent-kernel/SKILL.md` (≤ 80 lines) producing a 5-field kernel (Problem, Capabilities, Constraints, Non-goals, Success signal) plus a `sources:` provenance list, routed under the `sdd-specify` namespace meta-skill. Added `sdd new --from-brief <file>` to seed the Phase 1 spec from a raw brief without bypassing the spec/Gate 1. The kernel is explicitly subordinate to the formal spec (Constraint #4) — `sdd doctor` never accepts a kernel in place of a spec.
+- **§26 #5 — Ordered activation guardrail.** Created `agent-activation-discipline.instructions.md` (≤ 50 lines, `applyTo: .github/agents/**`) requiring ordered `mandatory-startup-files` reads, no inference of startup-file values, and a one-line confirmation per step. Added `sdd doctor --activation-discipline` asserting every agent frontmatter declares an ordered startup block, cross-referenced from the agent-design instruction index.
+
+### Phase C — Module & Lifecycle (✅ Complete — 10 tasks)
+
+- **§26 #6 — FE design→engineering file contract.** Created `design-tokens-template.md` (DESIGN spine — named visual tokens) and `experience-template.md` (EXPERIENCE spine — flows/states/IA/a11y) scoped strictly to `std-fe`/`aws-fe` (Constraint #8), with `{design-tokens.TOKEN}` reference syntax and an `experience` ↔ `design` reference-integrity WARN in the FE extension diagnostics (`sdd extension doctor`). Documented in `PLAYBOOK-std-fe.md` and `PLAYBOOK-aws-fe.md`.
+- **§26 #7 — Task-granular verification handoff.** Added an opt-in per-task verification checkpoint to `software-engineer.agent.md` reusing the Wave 13 verdict schema (`passed/retry/blocked` + `confidence` + `repair_hint`) — **no new agent, no loop** (Constraint #9 + §22 governed-outer-loop rejection). Gated behind ceremony level (`full`) in `ceremony-levels.instructions.md` and documented in PLAYBOOK § Phase 4.
+- **§26 #8 — Deprecation-gate auto-migration.** Extended `sdd init --upgrade` with an auto-migration pass over `CLI-DEPRECATIONS.md` for past-gate entries, `--preview` dry-run printing the plan and writing a per-change audit log (`.specify/upgrade-migration-audit.jsonl`), and a `sdd doctor` WARN when a past-gate deprecated artifact is still present.
+
+### Phase T/V — Tests (✅ Complete)
+
+- Added `TestWave27ProvenanceIntegrity` (Phase A), `TestWave27IntakeDiscipline` (Phase B), and `TestWave27ModuleLifecycle` (Phase C) plus integrity-list additions: `agent-activation-discipline` → `EXPECTED_INSTRUCTIONS`; `design-tokens-template.md` + `experience-template.md` → `EXPECTED_TEMPLATES`; `intent-kernel` skill-existence test; `trace` → `TestCommandTaxonomy.expected_commands`; `memory-index.schema.json` → `TestSchemaFiles`.
+- Full suite: **724 passed**. The 5 pre-existing failures previously tracked as tech debt have been resolved (see Follow-up below).
+
+### Follow-up — Pre-existing gap closure (✅ Complete)
+
+Five structural-integrity tests that pre-dated Wave 27 (carried as tech debt) were resolved by closing the underlying documentation/CLI gaps — no test was weakened:
+
+- **`sdd skill install` implemented (Wave 26 §25 #1 A.7).** Registered the missing `install` subcommand on `sdd skill` with `--explain-policy`, mirroring `sdd module install` (A.5/A.9) and `sdd extension install` (A.6): resolves the project policy via `gate_install`, prints the JSON decision under `--explain-policy`, then copies the skill into `.github/skills/<id>` (refusing to overwrite). Documented in README CLI surface and `SKILL-INDEX.md`.
+- **`stub-scan` routed under `sdd-review` (Wave 24).** Added the `stub`/`placeholder`/`TODO`/`not implemented` → `stub-scan` row to the `sdd-review` namespace meta-skill routing table.
+- **`drift-analysis` routed under `sdd-doctor` (Wave 24).** Added the `drift`/`orphaned AC`/`orphaned test`/`stale AC` → `drift-analysis` row to the `sdd-doctor` namespace meta-skill routing table.
+- **EVOLUTION §8 dual-dispatch design boundary (Wave 26 §25 #4).** Added the "Dual dispatch paths for the same command" rejected-feature row (GSD-2 v3.0.0 #5786–#5789) to the Rejected Features table, aligning with Constraint #10 in `sdd-philosophy.instructions.md` and the PLAYBOOK Architecture Invariants.
+- **README version header** bumped to `v4.9 — May 15, 2026` to match the shipped version.
+
+---
+
+## Wave 23 — Public Refresh May 11 (May 11, 2026)
+
+> **Status:** 🟡 In progress (Phase A ✅ Complete; Phase B–C planned)
+> **Plan:** [`_plan/WAVE-23-PUBLIC-REFRESH-MAY11-IMPLEMENTATION-PLAN.md`](_plan/WAVE-23-PUBLIC-REFRESH-MAY11-IMPLEMENTATION-PLAN.md)
+> **Source:** May 11 public-framework refresh harvest (§23) — Phase A targets cold-start optimisation harvested from anthropic-skills, mlx-knife, claude-code-templates patterns.
+
+### Phase A — Cold-Start Optimisation (✅ Complete)
+
+- **§23.A.1–§23.A.6 — Namespace meta-skills.** Created six 80-line cold-start meta-skills under `.github/skills/` (`sdd-specify`, `sdd-architect`, `sdd-implement`, `sdd-review`, `sdd-doctor`, `sdd-module`) that route to specialised sub-skills on demand instead of front-loading them.
+- **§23.A.7–§23.A.8 — Skill mapping cold-start surface.** Extended `.specify/skill-mapping.yaml` with a top-level `coldStartSurface:` list. `sdd skill list` now returns only the 6 namespace meta-skills by default; `sdd skill list --flat` lists every skill on disk.
+- **§23.A.9–§23.A.14 — Time-decay memory ranking.** Every `.specify/memory/*.md` file now carries `last_referenced_at` / `reference_count` frontmatter (and `decay_floor: true` for inviolable charters). Added `sdd/utils/memory_ranking.py` (relevance × exp(−days/30) scoring with stale detection), `sdd bridge --explain` (decision-table view), and `sdd memory list [--stale --threshold-days N]`.
+- **§23.A.15–§23.A.18 — Install profiles.** `sdd init --minimal | --upgrade | --full` writes a tier-tracked `.specify/install-profile.json`. `sdd doctor --suggest-upgrade` recommends upgrades when sub-phase usage exceeds the installed tier.
+- **§23.A.19–§23.A.21 — Description-length budget.** Authoring guidance enforces ≤100 char (WARN) / ≤200 char (ERROR) `description:` frontmatter. Added `sdd doctor --description-length` scanner and an audit (`_plan/WAVE-23-DESCRIPTION-AUDIT.md`) — 0 ERROR-level findings after tightening.
+- **§23.A.22–§23.A.25 — Context-utilisation guard.** New `sdd/utils/tokenizer.py` (tiktoken with character-fallback) provides per-model windows. `sdd bridge --context-check` and `sdd doctor --context` report current bridge-payload utilisation against the active model window with WARN at 60% and CRITICAL at 70%.
+- **§23.A.27 — Lazy phase-prompt loader.** Added `.github/prompts/sdd-phase-loader.prompt.md` so phase 0–5 prompt bundles are referenced only when needed.
+- **§23.A.26 / §23.A.28 — Deferred.** Per-phase prompt extraction and skill-pre-load registry deferred (filed in plan with rationale: existing prompts are already phase-scoped and on-demand).
+- **Tests.** 566 tests pass. Added `TestWave23PhaseAFlags` (CLI surface), `TestWave23NamespaceMetaSkills`, `TestWave23ColdStartSurface`, `TestWave23MemoryFrontmatter`, `TestWave23PhaseLoaderPrompt`, `TestWave23DescriptionLengthBudget`.
 
 ---
 

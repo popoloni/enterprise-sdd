@@ -87,3 +87,39 @@ skills:
     category: curated
     purpose: DETECT->FETCH->IMPLEMENT->CITE workflow for external-knowledge claims during authoring
     # globally available — any agent may encounter external-knowledge claims
+
+  # ── Wave 23 §23.A.7 — Namespace meta-skills (cold-start surface) ─────────
+  # These six skills form the DEFAULT cold-start surface. The 21 underlying
+  # curated/local skills above remain installed and reachable; they are
+  # surfaced via the namespace meta-skills' keyword-tags routing.
+  #
+  # `sdd skill list` (no flag) shows the 6 namespace meta-skills only.
+  # `sdd skill list --flat` shows the full 21+6 = 27 skill catalog.
+  - id: sdd-specify
+    category: namespace
+    purpose: router for Phase 1 (Specify) sub-skills
+  - id: sdd-architect
+    category: namespace
+    purpose: router for Phase 3 (Architect) sub-skills
+  - id: sdd-implement
+    category: namespace
+    purpose: router for Phase 4 (Implement) sub-skills
+  - id: sdd-review
+    category: namespace
+    purpose: router for Phase 5 (Review) sub-skills
+  - id: sdd-doctor
+    category: namespace
+    purpose: router for diagnostic and integrity sub-skills
+  - id: sdd-module
+    category: namespace
+    purpose: router for module operation sub-skills
+
+# Wave 23 §23.A.7 — Cold-start surface marker.
+# Tools (e.g. `sdd skill list`) honour this list when --flat is NOT passed.
+coldStartSurface:
+  - sdd-specify
+  - sdd-architect
+  - sdd-implement
+  - sdd-review
+  - sdd-doctor
+  - sdd-module

@@ -20,12 +20,17 @@
 - `[P]` = Parallel-safe (can run with other [P] tasks)
 - `[S]` = Sequential (depends on previous tasks)
 - `[T]` = Test task (can run parallel to feature tasks)
+- `_Boundary:_` = Component/module/layer this task may touch (for review boundary-violation detection)
+- `_Depends:_` = Prerequisite task IDs that must complete first
 
 ---
 
 ## Phase 1: Foundation
 
 ### T001 [P] - Database Schema Setup
+
+_Boundary: Database, PrismaSchema_
+_Depends: —_
 
 **Priority:** P1
 **Estimated:** 2h
@@ -51,6 +56,9 @@ Create database migration for new entities
 
 ### T002 [P] - Type Definitions
 
+_Boundary: TypeDefinitions, DTOs_
+_Depends: —_
+
 **Priority:** P1
 **Estimated:** 2h
 **Assignee:** [Name]
@@ -75,10 +83,12 @@ Create TypeScript types and DTOs for the feature
 
 ### T003 [S] - Module Scaffolding
 
+_Boundary: FeatureModule, AppModule_
+_Depends: T001, T002_
+
 **Priority:** P1
 **Estimated:** 4h
 **Assignee:** [Name]
-**Depends On:** T001, T002
 **Status:** Not Started
 
 **Description:**
@@ -103,10 +113,12 @@ Create NestJS module structure
 
 ### T004 [P] - Implement Create Operation
 
+_Boundary: FeatureController, FeatureService, FeatureRepository_
+_Depends: T003_
+
 **Priority:** P1
 **Estimated:** 4h
 **Assignee:** [Name]
-**Depends On:** T003
 **Status:** Not Started
 
 **Description:**
@@ -129,10 +141,12 @@ Implement create endpoint with validation
 
 ### T005 [P] - Implement Read Operations
 
+_Boundary: FeatureController, FeatureService_
+_Depends: T003_
+
 **Priority:** P1
 **Estimated:** 3h
 **Assignee:** [Name]
-**Depends On:** T003
 **Status:** Not Started
 
 **Description:**
@@ -154,10 +168,12 @@ Implement GET endpoints (list and single)
 
 ### T006 [P] - Implement Update Operation
 
+_Boundary: FeatureController, FeatureService_
+_Depends: T003_
+
 **Priority:** P1
 **Estimated:** 3h
 **Assignee:** [Name]
-**Depends On:** T003
 **Status:** Not Started
 
 **Description:**
@@ -179,10 +195,12 @@ Implement PUT/PATCH endpoint
 
 ### T007 [P] - Implement Delete Operation
 
+_Boundary: FeatureController, FeatureService_
+_Depends: T003_
+
 **Priority:** P2
 **Estimated:** 2h
 **Assignee:** [Name]
-**Depends On:** T003
 **Status:** Not Started
 
 **Description:**
@@ -204,10 +222,12 @@ Implement DELETE endpoint
 
 ### T008 [S] - Authorization Implementation
 
+_Boundary: FeatureController, AuthGuard_
+_Depends: T004, T005, T006, T007_
+
 **Priority:** P1
 **Estimated:** 4h
 **Assignee:** [Name]
-**Depends On:** T004, T005, T006, T007
 **Status:** Not Started
 
 **Description:**
@@ -231,10 +251,12 @@ Add authorization guards to all endpoints
 
 ### T009 [T] - Unit Tests
 
+_Boundary: TestSuite_
+_Depends: T003_
+
 **Priority:** P1
 **Estimated:** 4h
 **Assignee:** [Name]
-**Depends On:** T003
 **Status:** Not Started
 
 **Description:**
@@ -255,10 +277,12 @@ Write unit tests for service layer
 
 ### T010 [T] - Integration Tests
 
+_Boundary: TestSuite_
+_Depends: T004, T005, T006, T007_
+
 **Priority:** P1
 **Estimated:** 3h
 **Assignee:** [Name]
-**Depends On:** T004, T005, T006, T007
 **Status:** Not Started
 
 **Description:**
@@ -279,10 +303,12 @@ Write integration tests for API endpoints
 
 ### T011 [T] - E2E Tests
 
+_Boundary: TestSuite_
+_Depends: T008_
+
 **Priority:** P2
 **Estimated:** 2h
 **Assignee:** [Name]
-**Depends On:** T008
 **Status:** Not Started
 
 **Description:**
@@ -304,10 +330,12 @@ Write E2E tests for critical flows
 
 ### T012 [S] - Documentation
 
+_Boundary: Documentation_
+_Depends: T008_
+
 **Priority:** P2
 **Estimated:** 2h
 **Assignee:** [Name]
-**Depends On:** T008
 **Status:** Not Started
 
 **Description:**
@@ -326,10 +354,12 @@ Update API documentation
 
 ### T013 [S] - Code Review Fixes
 
+_Boundary: AllModified_
+_Depends: T009, T010_
+
 **Priority:** P1
 **Estimated:** 2h
 **Assignee:** [Name]
-**Depends On:** T009, T010
 **Status:** Not Started
 
 **Description:**

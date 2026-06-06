@@ -47,6 +47,12 @@ def add_analyze_parser(subparsers: argparse._SubParsersAction) -> None:  # type:
         default=None,
         help="git history window for hotspot churn (default: HEAD~100..HEAD); only used with --hotspots",
     )
+    p.add_argument(
+        "--provenance",
+        action="store_true",
+        default=False,
+        help="list untraced files on disk with no authorizing task (Wave 27 §26 #2 A.11)",
+    )
 
 
 def run_analyze(args: argparse.Namespace) -> int:
@@ -55,6 +61,9 @@ def run_analyze(args: argparse.Namespace) -> int:
     except FileNotFoundError as exc:
         output.error(str(exc))
         return 2
+
+    if getattr(args, "provenance", False):
+        return _run_provenance(repo_root)
 
     from sdd.utils.feature_resolver import resolve_feature_id
     explicit = args.feature_id or getattr(args, "feature_flag", None)
@@ -79,3 +88,39 @@ def run_analyze(args: argparse.Namespace) -> int:
     except Exception as exc:
         output.error(str(exc))
         return 2
+
+
+_SOURCE_ROOTS = ("src", "lib", "app")
+
+
+def _run_provenance(repo_root) -> int:
+    """Wave 27 §26 #2 A.11 — list files on disk with no authorizing task.
+
+    Reverse-gap complement to the forward `--gaps`: scans common source roots
+    and reports files absent from the forward traceability file set.
+    """
+    from sdd.utils import traceability
+
+    tracked = traceability.tracked_files(repo_root)
+    untraced: list[str] = []
+    for root_name in _SOURCE_ROOTS:
+        root = repo_root / root_name
+        if not root.is_dir():
+            continue
+        for f in sorted(root.rglob("*")):
+            if not f.is_file():
+                continue
+            rel = f.relative_to(repo_root).as_posix()
+            if rel not in tracked:
+                untraced.append(rel)
+
+    print("Wave 27 §26 #2 A.11 — provenance (untraced files)")
+    print("=" * 78)
+    if not untraced:
+        output.success("No untraced files — every source file maps to an authorizing task.")
+        return 0
+    for rel in untraced:
+        print(f"  UNTRACED  {rel}")
+    print()
+    print(f"{len(untraced)} untraced file(s) found.")
+    return 0

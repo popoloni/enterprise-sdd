@@ -17,3 +17,5 @@ Every agent MUST satisfy these six principles:
 Use the quick test for scope: if you need the word "and" to explain the purpose, the agent is too broad.
 
 See [agent-design-rationale.instructions.md](agent-design-rationale.instructions.md) for detailed rationale, tool guidance, and handoff examples.
+
+For the ordered activation-sequence guardrail (mandatory-startup-files, never-infer, per-step confirmation), see [agent-activation-discipline.instructions.md](agent-activation-discipline.instructions.md) (Wave 27 §26 #5).

@@ -1,3 +1,8 @@
+---
+# Wave 23 §23.A.9/§23.A.10 — memory frontmatter for time-decay ranking
+last_referenced_at: "2026-04-11T13:18:21.979015+00:00"
+reference_count: 0
+---
 # Research Cache
 
 > **Project-wide** cache of external research findings.

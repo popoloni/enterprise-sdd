@@ -5,7 +5,7 @@
   "domains": [
     {
       "name": "core-workflow",
-      "commands": ["init", "new", "gate", "status", "analyze", "report", "resume", "bridge"]
+      "commands": ["init", "new", "gate", "status", "analyze", "trace", "report", "resume", "bridge"]
     },
     {
       "name": "enablement",
@@ -25,7 +25,7 @@
     },
     {
       "name": "maintenance",
-      "commands": ["doctor"]
+      "commands": ["doctor", "accept-drift", "diff-drift"]
     }
   ],
   "phaseMapping": {

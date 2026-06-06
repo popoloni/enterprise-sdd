@@ -32,3 +32,6 @@ build/
 
 # Local SDD worktrees
 .sdd/worktrees/
+
+# Derived memory index (Wave 27 §26 #1) — disposable; markdown stays canonical
+.specify/memory/.index.json

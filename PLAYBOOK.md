@@ -1,7 +1,7 @@
 # Playbook: Enterprise SDD Workflow
 
-> **Version**: 4.7
-> **Date**: April 26, 2026
+> **Version**: 4.8
+> **Date**: May 12, 2026
 > **Audience**: anyone who wants to test the workflow — no prior knowledge required.
 
 ---
@@ -42,19 +42,24 @@
 23. [Meta Agents — Extending the Framework](#meta-agents--extending-the-framework)
 24. [User Modules](#user-modules)
 25. [Extensions and Presets](#extensions-and-presets)
-26. [CI/CD — Automated Workflows](#cicd--automated-workflows)
+26. [Module/Extension Governance](#moduleextension-governance-wave-26-25-1)
+27. [Automation Contract](#automation-contract-wave-26-b15)
+28. [Test Hygiene](#test-hygiene-wave-26-b17)
+29. [Architecture Invariants](#architecture-invariants-wave-26-25-4)
+30. [Refactor Patterns — Strangler-Fig](#refactor-patterns--strangler-fig-wave-26-25-6)
+31. [CI/CD — Automated Workflows](#cicd--automated-workflows)
 
 **Configuration**
-27. [Team Preferences](#team-preferences)
-28. [TDD Mode](#tdd-mode)
-29. [Multi-IDE Adapters](#multi-ide-adapters)
-30. [Issue Sync](#issue-sync)
+32. [Team Preferences](#team-preferences)
+33. [TDD Mode](#tdd-mode)
+34. [Multi-IDE Adapters](#multi-ide-adapters)
+35. [Issue Sync](#issue-sync)
 
 **Appendix**
-31. [Troubleshooting](#troubleshooting)
-32. [Cleanup After Testing](#cleanup-after-testing)
-33. [Glossary](#glossary)
-34. [Development History](#development-history)
+36. [Troubleshooting](#troubleshooting)
+37. [Cleanup After Testing](#cleanup-after-testing)
+38. [Glossary](#glossary)
+39. [Development History](#development-history)
 
 ---
 
@@ -99,9 +104,9 @@ Enterprise SDD Workflow is a **spec-driven** software development system (Spec-D
 The system provides:
 
 - **16 core AI agents**, each responsible for a specific step (13 pipeline + 3 auxiliary), plus 12 additional agents via the **sdd-evolution** module
-- **32 prompt files** for common workflow scenarios — including `retrospective.prompt.md` for post-feature learning loops, `convergence-review.prompt.md` for multi-model review orchestration, `release-triad-synthesis.prompt.md` for Gate 4 triad decision synthesis, `checkpoint-preview.prompt.md` for concern-ordered ship-time review, `context-debt-audit.prompt.md` for instruction/skill hygiene audits, and `adoption-business-case.prompt.md` for TCO + ROI analysis
-- **23 shared instruction files** that standardize cross-cutting concerns (traceability IDs, structured question format, constitution reading procedure, API design patterns, messaging design patterns, AI anti-pattern enforcement, anti-pattern code examples, adaptive ceremony levels, structured memory protocol, context bridge protocol, stuck detection, cost tracking, autonomy policy, TDD enforcement, prompt injection scanning, agent design principles, agent lint checks, progressive planning, escalation protocol, convergence review, gate hooks, skill authoring standards, source verification workflow) across all agents
-- **Curated skills and local skill descriptors** to support challenge, auto-implementation, traceability audit, extension safety, memory operating loops, security scanning (malicious code detection, supply chain risk, secrets scan), agent lint (IN-01 through IN-08), ambiguity scoring, document generation (docx/xlsx/pptx), document ingestion, adversarial spec analysis (red-team-spec), source citation auditing, and Jira REST fallback operations
+- **34 prompt files** for common workflow scenarios — including `retrospective.prompt.md` for post-feature learning loops, `convergence-review.prompt.md` for multi-model review orchestration, `release-triad-synthesis.prompt.md` for Gate 4 triad decision synthesis, `checkpoint-preview.prompt.md` for concern-ordered ship-time review, `context-debt-audit.prompt.md` for instruction/skill hygiene audits, `adoption-business-case.prompt.md` for TCO + ROI analysis, and `sdd-ci-bump.prompt.md` for monthly CI action SHA-pin maintenance
+- **23 shared instruction files** that standardize cross-cutting concerns (traceability IDs, structured question format, constitution reading procedure, API design patterns, messaging design patterns, AI anti-pattern enforcement, anti-pattern code examples, adaptive ceremony levels, structured memory protocol, context bridge protocol, stuck detection, cost tracking, autonomy policy, TDD enforcement, prompt injection scanning, agent design principles, agent lint checks, progressive planning, escalation protocol, convergence review, gate hooks, skill authoring standards, source verification workflow) across all agents — plus **custom quality gates** and **delta-spec** instructions — totalling **30 core + 19 companion** instruction files (49 total)
+- **Curated skills and local skill descriptors** to support challenge, auto-implementation, traceability audit, extension safety, memory operating loops, security scanning (malicious code detection, supply chain risk, secrets scan), agent lint (IN-01 through IN-08), ambiguity scoring, document generation (docx/xlsx/pptx), document ingestion, adversarial spec analysis (red-team-spec), source citation auditing, Jira REST fallback operations, hidden-requirement scanning, stub/placeholder detection, and drift analysis — **30 skills** (24 regular + 6 namespace meta-skills)
 - **4 quality gates** that automatically verify that artifacts are complete and consistent
 - **Python CLI + Bash/PowerShell automation suite** to manage features, validate gates, analyze consistency, generate context bridges, adapters, modules, presets, issue sync, memory flows, worktrees, and resume from checkpoints
 - **Structured memory + context bridges** to keep long-running feature work restartable and auditable
@@ -624,12 +629,31 @@ Group stories that can be **developed atomically** — related stories forming a
 
 > **Rule of thumb:** If the human reviewer needs more than one focused session to review all generated artifacts, you've batched too many stories.
 
-### 1.1 Vision Mode — Business Context
+### 1.0 Raw-intent on-ramp — intent-kernel *(Wave 27 §26 #4)*
 
-In Copilot Chat:
+If the input is a raw brief, brain dump, ticket transcript, or PRD fragment — and filling
+in the full spec template from scratch feels wasteful — use `sdd new --from-brief` to
+distil the input into a 5-field intent kernel and seed the Phase 1 scaffold:
 
+```bash
+# 1. Create the feature scaffold and seed spec.md from the brief.
+sdd new payment-gateway --from-brief docs/payment-brief.txt
+
+# 2. Open the seeded spec.md, review the kernel block, fill in the
+#    [NEEDS CLARIFICATION] fields, then hand off to @requirement-analyst.
+@requirement-analyst The intent kernel is pre-filled. Flesh out the user stories
+and acceptance criteria from it. The raw brief is embedded below the kernel.
 ```
-@requirement-analyst I need to create a business context for the "user authentication" feature.
+
+**The kernel is an intake aid, not a primary artifact.** It does not satisfy Gate 1.
+The five fields (Problem · Capabilities · Constraints · Non-goals · Success signal)
+and a `Sources:` provenance list are seeded as a labelled block inside `spec.md`.
+Once `@requirement-analyst` writes the full spec, the kernel section can be removed.
+
+Triggered automatically via the `sdd-specify` namespace when `brief`, `brain-dump`,
+`intake`, `kernel`, or `distil` appears in the context.
+
+### 1.1 Vision Mode — Business Context
 Users must be able to register with email/password, log in, log out, and recover 
 their password via email. Also support OAuth2 with Google and GitHub. 
 Target: B2B SaaS application with ~10,000 users.
@@ -776,6 +800,23 @@ The agent **may** also create an optional `data-model.md` file in the same direc
 
 > **Design Phases**: the architect follows a 5-phase workflow — Context Discovery → Domain Analysis → Feature Decomposition → Architecture Design → Cross-Cutting Concerns & Validation. Each phase has explicit exit criteria before moving to the next.
 
+#### Boundary & Dependency Annotations *(Wave 24 §24.B.4–B.5)*
+
+For medium and high complexity features, the architect annotates each task in the task breakdown with:
+
+- **`_Boundary: ComponentName_`** — declares which component/module/layer the task may touch. During review, modifications to files outside the declared boundary are flagged as potential architectural drift.
+- **`_Depends: T001, T002_`** — declares prerequisite task IDs.
+
+**Example:**
+```markdown
+### T004 [P] - Implement Create Operation
+
+_Boundary: OrderService, OrderRepository_
+_Depends: T001, T002_
+```
+
+For trivial-complexity features (≤ 1 US, ≤ 3 files, no new domain entities), boundary annotations are optional. The reviewer skips boundary checks when no annotations are present.
+
 ### 2.2 API Contracts (optional)
 
 If the feature includes REST endpoints:
@@ -827,6 +868,36 @@ npx @asyncapi/cli validate .specify/specs/001-user-authentication/contracts/asyn
 | 3 | Spec → Plan traceability | **Every** `US-XXX` in `spec.md` must be referenced in `plan.md`. If a user story is missing from the plan, the gate fails. |
 | 4 | Valid OpenAPI contract (optional) | If `contracts/openapi.yaml` exists, it is validated with `@redocly/cli lint`. If it doesn't exist or `npx` is unavailable → warning, not error. |
 | 5 | Valid AsyncAPI contract (optional) | Same logic with `@asyncapi/cli validate` |
+| 6 | Hidden Requirement Candidates section | `clarifications.md` must contain a `## Hidden Requirement Candidates` section (even if empty after review). This ensures the hidden-requirement scan was performed before closing Phase 2. |
+
+#### Hidden Requirement Scan (Wave 23)
+
+Before closing Phase 2, run the **hidden-requirement-scan** skill (or use the `@clarification` prompt) to surface implicit requirements that are assumed but never stated. The scan checks 6 categories:
+
+| # | Category | What to look for |
+|---|----------|------------------|
+| 1 | **API conventions** | Pagination, versioning, content types, rate-limit headers, error envelopes |
+| 2 | **Security defaults** | AuthN/AuthZ, input validation, encryption at rest/in transit |
+| 3 | **Observability** | Structured logging, metrics, tracing, health probes |
+| 4 | **Compliance regimes** | GDPR, PCI-DSS, SOX, HIPAA referenced by name without explicit AC |
+| 5 | **Performance SLAs** | Latency, throughput, availability implied but not quantified |
+| 6 | **Accessibility defaults** | WCAG level, keyboard navigation, screen-reader support |
+
+The scan produces a **Hidden Requirement Candidates** table in `clarifications.md`. Each candidate must be dispositioned: **Accept** (promote to AC in `spec.md`), **Reject** (mark N/A), or **Defer** (move to backlog). Gate 2 enforces the section's presence — even if all candidates are rejected, the section must exist to prove the scan was performed.
+
+**Worked example:**
+
+```markdown
+## Hidden Requirement Candidates
+
+> Scanned on 2026-05-11. Review each candidate.
+
+| # | Category | Candidate Requirement | Evidence | Disposition |
+|---|----------|-----------------------|----------|-------------|
+| 1 | Security | Input validation on all public endpoints | "REST API for user registration" | ☑ Accept |
+| 2 | Observability | Structured JSON logging for audit trail | "audit log of login attempts" | ☐ Defer |
+| 3 | Performance | Login endpoint ≤ 200 ms p99 | "real-time authentication" | ☑ Accept |
+```
 
 > **Important note**: Gate 2 does **not** verify that Gate 1 has passed. Only Gate 4 checks all previous gates. This means you can work on Phase 2 even if you haven't finalized Phase 1 — but the final Gate 4 will block if anything remains incomplete.
 
@@ -992,9 +1063,116 @@ Follow the plan in plan.md and make the existing tests pass.
 
 **Repeat** steps 4.1 and 4.2 for each user story/task until completion.
 
+### 4.3 Constitution Re-Injection (Wave 23 §23.B.1, §23.B.2)
+
+Phase 4 begins with a mandatory re-read of `.specify/memory/constitution.md`.
+The constitution loaded in Phase 0 may have drifted out of context by the time
+implementation begins; re-injecting it at write time closes the governance gap
+surfaced by Spec Kit v0.8.6.
+
+- The `software-engineer.agent.md` frontmatter declares
+  `mandatory-startup-files: [.specify/memory/constitution.md]`. The agent MUST
+  read the file and surface the 7 articles as a checklist before writing any
+  code.
+- The `implement-feature.prompt.md` references the constitution via
+  `@file:.specify/memory/constitution.md` so the file is inlined into the
+  invocation context.
+- `sdd doctor` (and `sdd doctor --strict`) verifies that every implementation
+  agent retains the constitution in its `mandatory-startup-files` list. The
+  check fails when the entry is removed by accident.
+
+### 4.4 Task-Granular Verification *(Wave 27 §26 #7 — governed ceremony)*
+
+> **Activation:** Set `"ceremonyLevel": "full"` in `.specify/specs/<feature-id>/.feature-meta.json`. The checkpoint is **off** for `ultra-light` and `standard` ceremony. This is proportional ceremony in action: most work does not need per-task overhead; high-risk, cross-team, or regulated delivery does.
+
+When enabled, the `@software-engineer` agent runs a structured self-check **before marking each task complete** using the Wave 13 verdict schema:
+
+```
+AC: [AC-XXX text]
+verdict: passed | retry | blocked
+confidence: high | medium | low
+repair_hint: [if verdict != passed]
+```
+
+The verdict block is recorded as a `<!-- task-verification: T-XXX -->` comment in `tasks.md`. No new agent is invoked; no outer loop is created — it is a structured self-assessment within the existing IMPLEMENTATION Mode.
+
+**Why this improves quality:** Gate-level verification (Gates 3–4) catches AC failures when rework is costly. Task-granular verification surfaces failures at the task boundary for `full`-ceremony features, reducing the number of findings that reach Gate 4.
+
+---
+
+## Artifact Integrity (Wave 23 §23.B.4–§23.B.9)
+
+Every artifact written by the SDD CLI under `.specify/specs/<feature-id>/` is
+hashed (SHA-256) at the time of the write. The ledger lives at
+`.specify/.artifact-hashes.json`; the schema is documented in
+`.specify/templates/.artifact-hashes.example.json`.
+
+**Why:** out-of-band hand-edits to spec/plan/tasks artifacts are a silent source
+of drift between what the AI agents reasoned about and what is on disk. The
+ledger turns invisible drift into a doctor finding.
+
+**Operations:**
+
+| Command | Purpose |
+|---------|---------|
+| `sdd new <name>` / `sdd gate <id> <N>` | Record SHAs for any artifact the phase produced (`written-by` = `sdd-new` / `sdd-gate-<N>`). |
+| `sdd doctor` | Surface drift as WARN; `sdd doctor --strict` promotes to FAIL. |
+| `sdd doctor --artifact-integrity` | Run the focused drift scan only. |
+| `sdd status <feature-id>` | Per-artifact `✓ unchanged` / `⚠ drift detected` / `❌ missing` indicator. |
+| `sdd accept-drift <artifact> [--by <id>]` | Rebaseline a deliberately-edited artifact; appends to `.specify/.audit-log.jsonl`. |
+| `sdd diff-drift <artifact>` | Hash-only mismatch report (snapshot subsystem deferred). |
+
+**Audit log** entries are append-only JSON Lines:
+
+```json
+{"ts":"2026-05-11T09:30:00Z","event":"accept-drift",
+ "artifact":"specs/001-foo/spec.md",
+ "old-sha256":"…","new-sha256":"…","accepted-by":"alice"}
+```
+
+---
+
+## CI Security (Wave 23 §23.B.10–§23.B.13)
+
+Source: Spec Kit v0.8.6 — every `uses:` reference in committed workflow files
+MUST be SHA-pinned to a 40-character commit hash; floating tags such as `@v4`
+can be re-tagged upstream and silently roll unreviewed code into the runner.
+
+- Policy: [`.github/instructions/ci-security.instructions.md`](.github/instructions/ci-security.instructions.md)
+  (≤ 50 lines; `applyTo: **/.github/workflows/**`).
+- Static check: `sdd doctor --ci-action-pin` ERRORs on any unpinned reference.
+  The check is also folded into the default `sdd doctor` run.
+- Maintenance: run `sdd-ci-bump.prompt.md` monthly to surface upgrade
+  candidates, diff each new SHA, and update pins after explicit human approval.
+  Document trust rationales for non-trivial third-party actions in this section.
+- Permissions: every workflow declares an explicit top-level `permissions:`
+  block (default `read-all`); per-job elevation only where strictly required.
+
 ---
 
 ## Review and Ship
+
+### Two-Stage Review Pipeline *(Wave 24 §24.B.1–B.3)*
+
+The `@review` agent performs a **two-stage review** that structurally separates spec compliance from code quality:
+
+| Pass | Focus | Gate Rule |
+|------|-------|-----------|
+| **Pass 1 — Spec Compliance** | AC verification (pass/fail per AC with evidence), NFR measurement, hotspot regression, boundary-violation detection | If ANY AC fails → STOP, report `CHANGES REQUIRED`, do NOT proceed to Pass 2 |
+| **Pass 2 — Code Quality** | Static analysis, architecture compliance, Synthesis Assessment, complexity thresholds, security, documentation, performance, deployment readiness | Only runs if Pass 1 passes |
+
+**Trivial-complexity exception:** For features classified as trivial (≤ 1 US, ≤ 3 files, no new domain entities), the two passes collapse into a single combined pass.
+
+### Loop Detection & Escalation *(Wave 24 §24.B.8–B.10)*
+
+The review agent monitors implementation progress via `fix_attempt_count` in the context bridge metadata:
+
+| Threshold | Action |
+|-----------|--------|
+| `fix_attempt_count ≥ 3` | Auto-trigger escalation protocol (Wave 18) with loop-pattern summary — files modified, tests failing, attempts made |
+| `fix_attempt_count ≥ 5` | Recommend task redesign — "task may need architectural decomposition — approach is not converging" |
+
+The count **increments** on each retry without test-suite improvement and **resets** when a new test passes or a previously failing test resolves. It persists across sessions in `context-bridge.md`.
 
 ### 5.1 Code Review
 
@@ -1259,6 +1437,7 @@ Options:
 - `--template` — choose scaffold template (`minimal`, `standard`, `full`, `enterprise`)
 - `--dry-run` — preview scaffold output without writing files
 - `--progressive` — activate sketch-then-refine mode for multi-phase deliveries (sets `progressivePlanning: true` in `.feature-meta.json`)
+- `--delta` — create a **delta specification** instead of a full spec *(Wave 24 §24.D)*. Delta specs are lightweight change documents for incremental modifications to existing features. They use `delta-spec-template.md` and support reduced ceremony: when `change_type` is MODIFIED or RENAMED and impact scope is ≤ 3 files, the architect phase is skipped and the change proceeds directly to implementation after Gate 1 approval.
 
 The shell script supports additional flags such as Product Owner and team metadata. Use `./.specify/scripts/new-feature.sh --help` when you need the full script surface.
 
@@ -1280,6 +1459,35 @@ sdd gate 001-user-auth 4 --synthesize   # synthesise Gate 4 release decision fro
 Equivalent to `.specify/scripts/validate-gate.sh <feature-id> <gate>`.
 
 Use gate numbers `1..4` for the current workflow.
+
+#### Custom Quality Gates — `.sdd/gates/*.yml` *(Wave 24 §24.C.1–C.5)*
+
+Projects can define **custom gate rules** in YAML files under `.sdd/gates/`. These run alongside built-in checks when `sdd gate` is invoked.
+
+**Schema** (all fields required):
+
+```yaml
+name: no-bare-todo              # unique gate identifier
+description: Flag bare TODO comments without ticket reference
+filePatterns:
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+condition: "//\\s*TODO(?!\\()"   # regex pattern to match
+severity: WARN                   # WARN (non-blocking) or FAIL (blocking)
+message: "TODO without ticket reference — use // TODO(TICKET-123): description"
+```
+
+**Execution order:** built-in gate checks run first, then custom gates in filename-alphabetical order. Results are reported per gate `name`.
+
+**ReDoS prevention:**
+- Regex timeout: 100ms per pattern (configurable via `.sdd/config`)
+- Max regex length: 200 characters (configurable)
+- Nested quantifiers (e.g., `(a+)+`) produce a WARN at load time
+
+Three example gate files are provided in `.specify/templates/gates/` as starting points:
+- `no-bare-todo.yml` — flag `// TODO` without ticket reference
+- `no-console-log.yml` — flag `console.log` in production code
+- `max-file-length.yml` — WARN at 500 lines, FAIL at 1000 lines
 
 #### `sdd status [feature-id]`
 
@@ -1377,7 +1585,18 @@ Run consistency analysis (CLI wrapper for `analyze-consistency.sh`).
 ```bash
 sdd analyze 001-user-auth
 sdd analyze 001-user-auth --gaps   # run gap-closure analysis only (coverage gaps, decision gaps, wiring gaps)
+sdd analyze 001-user-auth --drift  # run spec-vs-code drift analysis (orphaned ACs, orphaned tests, stale ACs)
 ```
+
+The `--drift` subcommand reads specs, extracts AC identifiers, cross-references against test files via traceability IDs, and reports:
+
+| Category | Definition | Severity |
+|----------|-----------|----------|
+| **Orphaned AC** | AC exists in spec but no test covers it | WARN |
+| **Orphaned Test** | Test references an AC not in any spec | WARN |
+| **Stale AC** | Covering test not modified since last spec change | INFO |
+
+Output is a table: `| Spec | AC | Status | Test File | Last Verified |`. For projects with ≥ 5 completed specs, drift results integrate with `sdd status`.
 
 #### `sdd report <feature-id> [--format md|docx|xlsx|pptx]`
 
@@ -1433,6 +1652,43 @@ sdd memory status 001-user-auth
 sdd memory doctor 001-user-auth
 sdd memory sync 001-user-auth
 ```
+
+#### `sdd memory list [--stale --threshold-days N]` *(Wave 23 §23.A.14)*
+
+Inspect repository-wide memory files (`.specify/memory/*.md`) with time-decay metadata.
+
+```bash
+sdd memory list                       # show every memory file with age, refs, decay-floor
+sdd memory list --stale                # only files unused longer than the threshold
+sdd memory list --stale --threshold-days 60
+```
+
+Memory files now carry `last_referenced_at`, `reference_count`, and (for inviolable charters) `decay_floor: true` frontmatter. The relevance score is `relevance × exp(-days/30)`; `decay_floor: true` keeps a memory always loaded.
+
+#### `sdd memory index | list --duplicates` *(Wave 27 §26 #1)*
+
+A **derived, disposable** index (`.specify/memory/.index.json`, gitignored) records one entry per decision/lesson with a content `fingerprint` (sha256) plus the recency metadata above. The markdown stays canonical (Constraint #9); the index is regenerable at any time.
+
+```bash
+sdd memory index                       # rebuild the derived index from markdown
+sdd memory list --duplicates           # surface fingerprint-collision groups (human merge)
+sdd doctor --memory-index              # prove disposability: delete → rebuild → identical
+```
+
+This completes the **memory triad**: integrity (§23 #3 content-hash) + recency (§23 #4 time-decay) + dedup/authority (#1). When two entries share a fingerprint, the authoritative record is the one with the highest `reference_count`, then the most recent.
+
+#### `sdd bridge --explain | --context-check` *(Wave 23 §23.A.13/§23.A.22)*
+
+Inspect what `sdd bridge` will inject into the next agent prompt.
+
+```bash
+sdd bridge --explain                   # decision-table view of memory scoring + dedup
+sdd bridge --context-check             # token utilisation vs the active model window
+sdd bridge --context-check --model claude-sonnet-4-5
+sdd doctor --context                    # shorthand for the bridge context-check
+```
+
+Utilisation thresholds: WARN at 60%, CRITICAL at 70%. Use `--no-record-hits` to skip recording reference hits when previewing. `--explain` also annotates authoritative vs. suppressed duplicate entries (decay scoring unchanged).
 
 #### `sdd skill list|validate|run|validate-mapping`
 
@@ -1505,6 +1761,8 @@ sdd doctor --format sarif --output results.sarif  # write SARIF to file
 
 Checks agents, instructions, skills, templates, CLI version, modules, and schema files. Outputs a `PASS` / `WARN` / `FAIL` verdict per category with file references for failures. `WARN` is used for ambiguous cases (file exists but content not validated); `FAIL` blocks on missing canonical files. It also emits an **Instruction Size** warning when any `.github/instructions/*.instructions.md` file exceeds 50 lines.
 
+**Description Content-Pattern (CSO)** — alongside the description-length check (Wave 23), doctor also validates the **content pattern**: descriptions must begin with a trigger phrase (`Use when`, `Apply when`, `Run when`, `Invoke when`) and must not contain workflow verbs (`generate`, `create`, `validate`, `produce`, `build`, `emit`, `run`, `execute`, `check`). Rationale: descriptions are retrieval triggers for the IDE's skill/instruction matcher — they say _when_ to activate, not _what_ the file does. See `instruction-authoring.instructions.md` § CSO Content-Pattern Rule for exemplars.
+
 **Hidden Unicode Scan** — scans all files under `.github/instructions/`, `.github/skills/`, `.github/agents/`, `.github/prompts/`, and `.specify/templates/` for 6 categories of hidden Unicode characters (Tag Characters, Bidi Overrides, Zero-Width, Variation Selectors, Invisible Operators, Deprecated Formatting). Severity: ERROR. See `hidden-unicode-scan.instructions.md` for codepoint ranges.
 
 **APM lockfile detection** — when `apm.lock.yaml` is detected in the project root, doctor outputs an INFO message: "APM lockfile detected — APM-managed files are excluded from SDD drift checks. Run `apm audit` to verify APM-managed file integrity."
@@ -1519,6 +1777,29 @@ Checks agents, instructions, skills, templates, CLI version, modules, and schema
 | `sdd/instruction-oversized` | warning | Instruction file exceeds 50-line guideline |
 | `sdd/skill-oversized` | warning | Skill SKILL.md exceeds 80-line guideline |
 | `sdd/hidden-unicode` | error | Hidden Unicode character detected in agent primitive file |
+| `sdd/stub-scan` | warning/error | Stub/placeholder pattern detected in implementation code |
+| `sdd/complexity` | warning/error | File or function exceeds configured complexity threshold |
+
+**Stub Scan** (`--stub-scan`) — scans implementation files for stub/placeholder patterns that indicate incomplete work. Severity levels:
+
+| Condition | Severity |
+|-----------|----------|
+| Empty handler or bare placeholder (`return ""`, `return null`, empty catch) | CRITICAL |
+| `TODO`/`FIXME`/`HACK`/`PLACEHOLDER` without ticket reference | WARN |
+| `TODO(TICKET-123)` with ticket reference | INFO (suppressed) |
+
+Suppression: a `// TODO(TICKET-123): description` format signals intentional deferral and is downgraded to INFO. File-pattern exclusions (e.g., `**/examples/**`) are configurable in `.sdd/config`. See `stub-scan` skill for the full pattern list.
+
+**Complexity Thresholds** (`--complexity`) — checks implementation files against configurable thresholds:
+
+| Metric | Default | WARN | CRITICAL |
+|--------|---------|------|----------|
+| Lines per file | 500 | 500–750 (1.0–1.5×) | > 750 (> 1.5×) |
+| Lines per function | 50 | 50–75 | > 75 |
+| Cyclomatic complexity | 10 | 10–15 | > 15 |
+| Dependencies per module | 15 | 15–22 | > 22 |
+
+Thresholds are configurable in `.sdd/config` under `complexity_thresholds`. File-pattern exclusions (e.g., generated code, migrations) are supported via `complexity_exclusions`.
 
 #### `sdd ingest <path> [--dry-run]`
 
@@ -1698,6 +1979,41 @@ sdd skill list --scope review   # only skills visible to the review agent
 ```
 
 The Wave 20 baseline scopes `hotspot-review` and `sdd-spec-review` to `review`/`design-reviewer`, and `prfaq-working-backwards` to `requirement-analyst`/`spec`. Add new entries to `skill-mapping.yaml` to scope additional skills.
+
+### Cold-Start Skill Surface — `sdd skill list` and `--flat` *(Wave 23 §23.A.7/§23.A.8)*
+
+Wave 23 reduces cold-start overhead by routing the default `sdd skill list` view to a small set of namespace meta-skills. Specialised sub-skills are still on disk and loaded on demand.
+
+```bash
+sdd skill list                  # 6 namespace meta-skills (cold-start surface)
+sdd skill list --flat           # every skill on disk (legacy view)
+sdd skill list --scope review   # subset visible to a single agent
+```
+
+The cold-start surface is configured in `.specify/skill-mapping.yaml` under `coldStartSurface:`. The six entries are: `sdd-specify`, `sdd-architect`, `sdd-implement`, `sdd-review`, `sdd-doctor`, `sdd-module`.
+
+### Install Profiles — `sdd init --minimal | --upgrade | --full` *(Wave 23 §23.A.15–§23.A.18)*
+
+`sdd init` now records a tier in `.specify/install-profile.json` (`{wave, profile, tier, recorded_at}`).
+
+```bash
+sdd init --minimal        # tier 1: smallest install
+sdd init --upgrade        # promote tier when sub-phase usage exceeds the baseline
+sdd init --full           # tier 3: install everything (default)
+sdd doctor --suggest-upgrade   # recommend a tier bump based on observed usage
+```
+
+`--upgrade` is a no-op when the current tier is already ≥ 2.
+
+### Description-Length Budget — `sdd doctor --description-length` *(Wave 23 §23.A.19–§23.A.21)*
+
+Frontmatter `description:` fields under `.github/agents/`, `.github/instructions/`, `.github/prompts/` and `.github/skills/**/SKILL.md` MUST be ≤ 100 chars (WARN) and ≤ 200 chars (ERROR).
+
+```bash
+sdd doctor --description-length   # scan all descriptions
+```
+
+Audit baseline is recorded in [`_plan/WAVE-23-DESCRIPTION-AUDIT.md`](_plan/WAVE-23-DESCRIPTION-AUDIT.md). The Wave 23 baseline is 0 ERROR-level findings.
 
 ### Module Manifest Hashing — `sdd module verify <id>`
 
@@ -2036,7 +2352,7 @@ sequenceDiagram
 
 ## Prompt Library
 
-The `.github/prompts/` directory contains **32 pre-built prompt files** for common workflow scenarios. These are quickstart templates — invoke them to skip the boilerplate and jump straight into the right workflow.
+The `.github/prompts/` directory contains **34 pre-built prompt files** for common workflow scenarios. These are quickstart templates — invoke them to skip the boilerplate and jump straight into the right workflow.
 
 | Prompt | File | What it does |
 |--------|------|-------------|
@@ -2286,6 +2602,105 @@ sdd preset apply sdd-preset-api
 | `standard` | 2 | Typical feature development |
 | `full` | 3 | Enterprise feature with full governance |
 | `enterprise` | 4 | Maximum traceability and review |
+
+---
+
+## Module/Extension Governance *(Wave 26 §25 #1)*
+
+Enterprise SDD ships a **declarative governance policy** that gates every
+`sdd module install`, `sdd extension install`, and `sdd skill install` call.
+The policy lives at `.sdd-modules/policy.yaml`. When the file is **absent**,
+all installs are allowed (default-permissive — preserves Wave 20 behaviour).
+
+**Schema:** [`.specify/schemas/policy.schema.json`](./.specify/schemas/policy.schema.json) ·
+**Authoring guide:** [`.github/instructions/module-extension-policy.instructions.md`](./.github/instructions/module-extension-policy.instructions.md) ·
+**Skill:** `policy-author` · **Template:** [`.specify/templates/policy-template.yaml`](./.specify/templates/policy-template.yaml).
+
+### Ternary semantics
+For every `allow`/`deny` list under `modules` / `skills` / `extensions` / `capabilities`:
+
+| Value | Meaning |
+|-------|---------|
+| field absent / `null` | inherit verbatim from the parent (`extends:`) |
+| `[]` (explicit empty) | override parent (block parent's set for this category) |
+| `[items]` | explicit list — allowlists **intersect**, denylists **union** |
+
+This guarantees the **tighten-only invariant**: a child policy can never widen
+what its parent allows. `extends:` chains are capped at depth 8 with cycle
+detection, and `fetch_failure_default: block` (the default) refuses to load
+when a parent file is missing — fail-closed.
+
+### Capability denial
+A module/skill/extension that declares a denied capability (e.g.
+`capabilities.deny: [shell-exec]`) is refused regardless of allowlist match.
+Capabilities are read from each artifact's manifest (`module.json`,
+`sdd-extension.json`, or `SKILL.md` frontmatter).
+
+### CLI surfaces
+```bash
+# Dry-run: resolve policy + print decision (JSON), no disk writes.
+sdd module install <id>     --explain-policy
+sdd extension install <dir> --explain-policy
+sdd skill install <dir>     --explain-policy
+
+# Validate the policy chain (schema + extends resolution).
+sdd doctor --policy-preflight
+
+# Audit installed modules against the current policy. Add --strict in CI.
+sdd doctor --policy-compliance
+sdd doctor --policy-compliance --format sarif > sdd-policy.sarif
+```
+
+`--policy-compliance` emits SARIF 2.1.0 with rule id
+`sdd-policy-compliance-drift` (severity `warning`, escalated to `error` under
+`--strict`) for upload to GitHub Code Scanning.
+
+### Unmanaged-artifact audit *(Wave 27 §26 #3)*
+
+Policy compliance only evaluates **registered** artifacts. A hand-dropped skill
+or module under a managed root (`.sdd-modules/modules/`, `.github/skills/`,
+`.specify/skills/`, `.sdd-extensions/`) with **no `registry.json` entry** would
+otherwise slip past every governance gate. `--registry-audit` closes that
+registry-bypass blind spot:
+
+```bash
+# Flag any on-disk module/skill/extension with no registry entry as UNMANAGED.
+sdd doctor --registry-audit
+
+# Fail-closed in CI and emit SARIF for Code Scanning.
+sdd doctor --registry-audit --strict
+sdd doctor --registry-audit --format sarif > sdd-unmanaged.sarif
+```
+
+`--registry-audit` emits SARIF rule id `sdd-unmanaged-artifact` (severity
+`warning`, escalated to `error` under `--strict`, which also makes the command
+exit non-zero). After review, bring an artifact under registry control:
+
+```bash
+# Hash + Unicode scan, then register with per-file sha256.
+sdd module adopt .sdd-modules/modules/<name>
+sdd skill  adopt .github/skills/<name>
+```
+
+A re-run of `--registry-audit` no longer flags an adopted artifact.
+
+### Reverse traceability & provenance *(Wave 27 §26 #2)*
+
+The forward chain US→AC→TC→Task→Code is produced during Planning/Implementation.
+`sdd trace --reverse` inverts it for a single file, and `sdd analyze
+--provenance` reports the reverse gap (files on disk with no authorizing task):
+
+```bash
+# Path → originating task / AC / US / spec. Exit 0 if tracked, 1 if untracked.
+sdd trace --reverse src/api/server.ts
+sdd trace --reverse src/api/server.ts --json    # Wave 26 envelope contract
+
+# Bulk: list untraced source files (reverse-gap complement to `analyze --gaps`).
+sdd analyze --provenance
+```
+
+`sdd trace` is a **pure read** (zero writes, zero network) and deterministic, so
+it is safe to gate CI on its exit code.
 
 ---
 
@@ -2634,7 +3049,7 @@ The dashboard should no longer show the feature.
 
 ## Development History
 
-The framework evolved through 19 development waves. The detailed execution plan and completion evidence are preserved in [_plan/MASTER-PLAN.md](_plan/MASTER-PLAN.md). Historical snapshots are archived under [_plan/outdated/](_plan/outdated/).
+The framework evolved through 19 development waves. The detailed execution plan and completion evidence are preserved in [_plan/MASTER-PLAN.md](_plan/MASTER-PLAN.md). Historical snapshots from earlier waves (8–11) are preserved alongside the active plans under [_plan/](_plan/) with the `WAVE-XX-` prefix.
 
 **Wave 19 (April 2026) — Agent Skills, VORTEX & FE Harvest:**
 - Added `skill-authoring.instructions.md` — canonical anti-rationalization rubric for all SDD skills
@@ -2654,3 +3069,86 @@ This playbook is aligned with:
 
 - [README.md](README.md) — Project structure, quick start, agent and script references
 - [.specify/templates/README.md](.specify/templates/README.md) — Template catalog with phase/agent/output mapping
+
+---
+
+## Automation Contract (Wave 26 §B.15)
+
+The CLI is scriptable. Eight commands accept `--json` and `--pretty`; their stdout is a single JSON envelope validated by [.specify/schemas/cli-output.schema.json](.specify/schemas/cli-output.schema.json).
+
+**Commands with `--json` support:** `doctor`, `status`, `gate`, `module`, `extension`, `skill`, `bridge`, `memory`.
+
+**Envelope shape (schema_version: 1):**
+
+```json
+{
+  "schema_version": 1,
+  "ok": true,
+  "command": "doctor",
+  "data": { "exit_code": 0, "output_text": "…" },
+  "warnings": [],
+  "errors": []
+}
+```
+
+- `ok` is derived as `not errors` unless explicitly set.
+- `data` is **always a JSON object** (map-form discipline). Top-level arrays are forbidden by the schema.
+- `--pretty` is a modifier — only valid when `--json` is also passed.
+- All progress / log output is routed to **stderr** while `--json` is active, leaving stdout for the envelope alone.
+
+**Per-command schema introspection.** `sdd schema show <command>` prints the JSON Schema for that command's envelope (base schema plus any per-command refinement found under `.specify/schemas/cli-output/<command>.schema.json`). Pin against the printed schema in CI to detect contract drift.
+
+**Atomic artifact writes.** Every artifact written under `.specify/**`, `.sdd-modules/**`, or `.sdd-extensions/**` MUST go through `sdd.io.atomic_write_text|atomic_write_json|atomic_write_yaml`. The `lint-atomic-writes` GitHub workflow (Wave 26 §B.5) and the `sdd doctor --atomic-write-discipline` flag (Wave 26 §B.7) block raw `Path.write_text(...)` / `Path.write_bytes(...)` / `json.dump(open(...))` regressions. See [.github/instructions/atomic-artifact-writes.instructions.md](.github/instructions/atomic-artifact-writes.instructions.md) for the full discipline.
+
+**Authoring rule.** When adding a new command that produces machine-readable output, follow [.github/instructions/cli-json-contract.instructions.md](.github/instructions/cli-json-contract.instructions.md): wire the flags via `sdd.io.add_json_flags`, wrap the runner with `sdd.io.wrap_envelope`, and (optionally) publish a per-command data schema.
+
+---
+
+## Test Hygiene (Wave 26 §B.17)
+
+The pytest suite must remain hermetic — runs MUST NOT touch the developer's real `$HOME` or any existing SDD workspace.
+
+- An autouse session-scoped fixture in [_tests/conftest.py](_tests/conftest.py) reroutes `Path.home()`, `Path.expanduser()`, and the `HOME` / `USERPROFILE` env vars to a per-session sandbox directory.
+- Override the sandbox location by exporting `SDD_TEST_HOME=/path/to/dir` before invoking pytest; otherwise a temp dir is created and cleaned up automatically.
+- Tests SHOULD NOT mutate paths outside the fixtures (`sandbox`, `fresh_sandbox`) or the redirected `$HOME`. Direct writes to `~/.config`, `~/.specify`, or other user-global locations indicate a leak — refactor the test to use the provided fixtures.
+- The CI lint workflow `lint-atomic-writes` complements this by guaranteeing that even when production code writes under `.specify/**`, it does so atomically — preventing half-written artifacts from contaminating subsequent test sessions.
+- Run `cd enterprise-sdd && python -m pytest _tests/ -v` to validate locally before publishing changes.
+
+---
+
+## Architecture Invariants (Wave 26 §25 #4)
+
+These invariants protect SDD from architectural drift that is cheap to prevent and expensive to repair after the fact. They are documented here as concrete review-checklist items; the underlying philosophy lives in [.github/instructions/sdd-philosophy.instructions.md](.github/instructions/sdd-philosophy.instructions.md) (constraint #10) and the matching row in the [§8 Design Boundaries table](../ENTERPRISE-SDD-EVOLUTION.md#8-design-boundaries--what-not-to-adopt).
+
+**Invariant 1 — Single dispatch per command.** Every SDD CLI command has exactly one dispatch implementation. Interactive (TTY) and any future autonomous (CI / scripted / agent-driven) variants of the same command MUST share that implementation; the difference between them is expressed at the **edges**:
+
+- **Renderer:** TTY progress vs. JSON envelope (Wave 26 §B `--json` contract). The renderer is selected by the `--json` flag, not by a forked entry point.
+- **Escalation policy:** ask-the-user vs. consult escalation rules (Wave 24 escalation protocol). The policy is selected by configuration / context, not by a forked code path.
+
+**Applies to:** any new SDD command, and any future autonomous variant of an existing SDD command (e.g., a hypothetical `sdd ship --auto` or `sdd implement --headless`).
+
+**Anti-pattern (forbidden):** introducing an `auto_dispatch()` sibling to `dispatch()`, or an `if interactive: ... else: ...` fork at the top of a command's runner that selects between two distinct execution graphs.
+
+**Allowed:** single `dispatch()` that consults a `RenderContext` and an `EscalationPolicy` injected from the edges; behavioural differences live in those two objects, not in parallel implementations.
+
+**Evidence:** GSD-2 v3.0.0 PRs #5786–#5789 collapsed a multi-month parity gap between guided and Auto-Orchestration paths; the parity gap was the direct, predictable cost of having forked the dispatch surface. SDD documents this invariant **before** it is violated, not after.
+
+---
+
+## Refactor Patterns — Strangler-Fig (Wave 26 §25 #6)
+
+When a CLI source file outgrows the [§21 #1 instruction-sizing budget](../ENTERPRISE-SDD-EVOLUTION.md) (or any analogous file-size rule), SDD's canonical refactor strategy is **strangler-fig** — never a single big-bang rewrite.
+
+**Strangler-fig in practice:**
+
+1. **One concern per PR.** Identify the smallest cohesive concern (e.g., console rendering, asset loading, path utilities) and extract it into a new sibling module behind a stable internal API. Spec Kit #2474 + #2543 are the canonical worked example: the monolithic `cli.py` was decomposed into `_console.py`, `_assets.py`, `_utils.py` — one concern per PR.
+2. **Keep the public API append-only.** Existing imports (`from sdd.cli import build_parser`, etc.) MUST continue to work unchanged through every PR in the chain. The refactor is invisible to downstream consumers.
+3. **Ship green per PR.** Every PR in the chain leaves the test suite passing on its own; the chain can be paused or reordered without leaving the codebase in a half-migrated state.
+4. **Bound the chain.** A refactor proposal MUST stage the work into ≤ 5 PRs unless explicitly justified in the planning document. Larger chains indicate the refactor is mis-scoped — split the feature instead of stacking PRs.
+
+**When NOT to use strangler-fig:**
+
+- For new features that simply need to fit within budget from day one — write them sized correctly, no refactor needed.
+- For renames or symbol-level moves that do not change responsibility — those are mechanical, not architectural.
+
+**Authoring rule for proposals:** when an `sdd-evolve` harvest proposes a refactor that touches a file already over budget, the proposal MUST cite the strangler-fig pattern and stage the work into ≤ 5 append-only PRs. See [.github/agents/sdd-evolve.agent.md](../.github/agents/sdd-evolve.agent.md) § Constraints.

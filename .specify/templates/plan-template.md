@@ -280,7 +280,20 @@ See: [contracts/openapi.yaml](./contracts/openapi.yaml)
 
 ---
 
-## 13. Sign-off
+## 13. Synthesis Assessment
+
+### Generalization
+> [1-sentence: Can patterns in this design be reused across other features or projects?]
+
+### Build-vs-Adopt
+> [1-sentence: For each major component, should we build custom or adopt an existing library/service?]
+
+### Simplification
+> [1-sentence: Can this design be simpler without sacrificing requirements?]
+
+---
+
+## 14. Sign-off
 
 - [ ] Tech Lead: _________________ Date: _______
 - [ ] Security Review: _________________ Date: _______

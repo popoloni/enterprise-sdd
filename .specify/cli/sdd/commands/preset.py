@@ -9,6 +9,7 @@ from pathlib import Path
 
 from sdd.utils.config import find_repo_root
 from sdd.utils import output
+from sdd.io import atomic_write_json
 
 _BUILTIN_PRESETS: dict[str, str] = {
     "minimal": "Ceremony level 1 — quick-fix / hotfix workflow",
@@ -113,7 +114,7 @@ def _apply_preset(args: argparse.Namespace) -> int:
         if dry_run:
             output.info(f"Would write {config_path}: {json.dumps(config, indent=2)}")
             return 0
-        config_path.write_text(json.dumps(config, indent=2) + "\n")
+        atomic_write_json(config_path, config, sort_keys=False)
         output.success(f"Preset '{preset_name}' applied (ceremony level {level})")
         return 0
 
@@ -137,7 +138,7 @@ def _apply_preset(args: argparse.Namespace) -> int:
         config = {}
 
     config.update(preset_data)
-    config_path.write_text(json.dumps(config, indent=2) + "\n")
+    atomic_write_json(config_path, config, sort_keys=False)
     output.success(f"Preset '{preset_name}' applied")
 
     # Apply wrap overlays if specified
@@ -154,7 +155,7 @@ def _apply_preset(args: argparse.Namespace) -> int:
                     output.warn(f"Invalid overlay preset '{overlay_name}': {exc}")
             else:
                 output.warn(f"Overlay preset '{overlay_name}' not found at {overlay_file}")
-        config_path.write_text(json.dumps(config, indent=2) + "\n")
+        atomic_write_json(config_path, config, sort_keys=False)
         output.success(f"Preset '{preset_name}' applied with {len(wraps)} overlay(s)")
 
     return 0
